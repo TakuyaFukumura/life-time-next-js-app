@@ -21,13 +21,35 @@ const events: LifeEvent[] = [
 ];
 
 describe('Timeline', () => {
-    it('0歳から100歳までの年齢目盛りと項目を表示する', () => {
+    it('初期状態ではカードを表示せず、年齢目盛りとマーカーを表示する', () => {
         render(<Timeline events={events}/>);
 
         expect(screen.getByText('0歳')).toBeInTheDocument();
         expect(screen.getByText('100歳')).toBeInTheDocument();
-        expect(screen.getByRole('button', {name: /資格取得/})).toHaveTextContent('30歳・仕事');
-        expect(screen.getByRole('button', {name: /資格取得/})).toHaveTextContent('進行中');
+        expect(screen.getByRole('button', {name: /資格取得/})).toBeInTheDocument();
+        expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('マーカーにカーソルを合わせるとカードを浮かび上がらせる', () => {
+        render(<Timeline events={events}/>);
+
+        fireEvent.mouseEnter(screen.getByRole('button', {name: /資格取得/}));
+
+        const tooltip = screen.getByRole('tooltip');
+        expect(tooltip).toHaveTextContent('資格取得');
+        expect(tooltip).toHaveTextContent('30歳・仕事');
+        expect(tooltip).toHaveTextContent('進行中');
+    });
+
+    it('キーボードでマーカーにフォーカスするとカードを表示する', () => {
+        render(<Timeline events={events}/>);
+
+        const marker = screen.getByRole('button', {name: /誕生/});
+        fireEvent.focus(marker);
+        expect(screen.getByRole('tooltip')).toHaveTextContent('誕生');
+
+        fireEvent.blur(marker, {relatedTarget: document.body});
+        expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
     });
 
     it('項目を選択すると説明を表示し、再度選択すると閉じる', () => {
@@ -50,23 +72,23 @@ describe('Timeline', () => {
             />
         );
 
-        const buttons = screen.getAllByRole('button');
-        expect(buttons[0].style.left).toBe(buttons[1].style.left);
-        expect(buttons[0].style.top).not.toBe(buttons[1].style.top);
+        const markers = screen.getAllByRole('button');
+        expect(markers[0].parentElement?.style.left).toBe(markers[1].parentElement?.style.left);
+        expect(markers[0].parentElement?.style.top).not.toBe(markers[1].parentElement?.style.top);
     });
 
-    it('年齢が近い項目のカードを別の行に配置する', () => {
+    it('年齢が近いマーカーが重ならないよう縦にずらす', () => {
         render(
             <Timeline
                 events={[
                     events[0],
-                    {...events[1], age: 15},
+                    {...events[1], age: 1},
                 ]}
             />
         );
 
-        const buttons = screen.getAllByRole('button');
-        expect(buttons[0].style.top).not.toBe(buttons[1].style.top);
+        const markers = screen.getAllByRole('button');
+        expect(markers[0].parentElement?.style.top).not.toBe(markers[1].parentElement?.style.top);
     });
 
     it('項目がない場合は空の状態を表示する', () => {

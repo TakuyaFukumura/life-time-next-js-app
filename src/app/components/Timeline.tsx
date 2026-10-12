@@ -1,17 +1,16 @@
 'use client';
 
 import {useState} from 'react';
+import type {FocusEvent} from 'react';
 import type {LifeEvent} from '../../lib/life-events';
 
 const TIMELINE_WIDTH = 1400;
 const HORIZONTAL_PADDING = 24;
 const CARD_WIDTH = 200;
-const CARD_GAP = 12;
 const AXIS_Y = 48;
-const FIRST_CARD_Y = 142;
 const CARD_LINE_HEIGHT = 24;
-const LANE_GAP = 20;
 const MARKER_LANE_HEIGHT = 18;
+const MARKER_SIZE = 16;
 
 function getNameLineCount(name: string): number {
     const textWidth = Array.from(name).reduce(
@@ -26,33 +25,31 @@ type PositionedEvent = {
     event: LifeEvent;
     x: number;
     cardLeft: number;
-    cardTop: number;
     cardHeight: number;
     lane: number;
+    markerY: number;
 };
 
 function layoutEvents(events: readonly LifeEvent[]): PositionedEvent[] {
     const sorted = events
         .map((event, index) => ({event, index}))
         .sort((a, b) => a.event.age - b.event.age || a.index - b.index);
-    const laneLastRight: number[] = [];
-    const laneHeights: number[] = [];
+    const laneLastX: number[] = [];
 
-    const laidOutEvents = sorted.map(({event}) => {
+    return sorted.map(({event}) => {
         const x = HORIZONTAL_PADDING +
             (event.age / 100) * (TIMELINE_WIDTH - HORIZONTAL_PADDING * 2);
         const cardLeft = Math.max(0, Math.min(x - CARD_WIDTH / 2, TIMELINE_WIDTH - CARD_WIDTH));
-        let lane = laneLastRight.findIndex((lastRight) => cardLeft - lastRight >= CARD_GAP);
+        let lane = laneLastX.findIndex((lastX) => x - lastX >= MARKER_SIZE + 4);
         if (lane === -1) {
-            lane = laneLastRight.length;
+            lane = laneLastX.length;
         }
-        laneLastRight[lane] = cardLeft + CARD_WIDTH;
+        laneLastX[lane] = x;
         const nameLines = getNameLineCount(event.name);
         const cardHeight = Math.max(
             80,
             nameLines * CARD_LINE_HEIGHT + 44 + (event.type === 'goal' ? 20 : 0),
         );
-        laneHeights[lane] = Math.max(laneHeights[lane] ?? 0, cardHeight);
 
         return {
             event,
@@ -60,32 +57,32 @@ function layoutEvents(events: readonly LifeEvent[]): PositionedEvent[] {
             cardLeft,
             lane,
             cardHeight,
+            markerY: AXIS_Y + 17 + lane * MARKER_LANE_HEIGHT,
         };
     });
-    const laneTops: number[] = [];
-    laneHeights.reduce((top, laneHeight, lane) => {
-        laneTops[lane] = top;
-        return top + laneHeight + LANE_GAP;
-    }, FIRST_CARD_Y);
-
-    return laidOutEvents.map((item) => ({
-        ...item,
-        cardTop: laneTops[item.lane],
-    }));
 }
 
 export default function Timeline({events}: {readonly events: readonly LifeEvent[]}) {
     const [selectedEvent, setSelectedEvent] = useState<LifeEvent | null>(null);
+    const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+    const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
     const positionedEvents = layoutEvents(events);
     const height = Math.max(
         260,
-        ...positionedEvents.map(({cardTop, cardHeight}) => cardTop + cardHeight + 16),
+        ...positionedEvents.map(({markerY, cardHeight}) => markerY + cardHeight + 40),
     );
+
+    const handleBlur = (index: number, event: FocusEvent<HTMLDivElement>) => {
+        const nextTarget = event.relatedTarget;
+        if (!(nextTarget instanceof Node && event.currentTarget.contains(nextTarget))) {
+            setFocusedIndex((currentIndex) => currentIndex === index ? null : currentIndex);
+        }
+    };
 
     return (
         <section aria-label="人生のタイムライン">
             <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-700 dark:text-gray-300">
-                <span>項目を選択すると説明を表示します。</span>
+                <span>マーカーにカーソルを合わせるかタップするとカードを表示します。選択すると説明を確認できます。</span>
                 <span role="img" aria-label="イベントは丸、目標はひし形">
                     <span aria-hidden="true">●</span> イベント
                     <span className="ml-4" aria-hidden="true">◆</span> 目標
@@ -129,48 +126,76 @@ export default function Timeline({events}: {readonly events: readonly LifeEvent[
                                 </div>
                             );
                         })}
-                        {positionedEvents.map(({event, x, cardLeft, cardTop, lane}, index) => {
-                            const markerY = AXIS_Y + 17 + lane * MARKER_LANE_HEIGHT;
+                        {positionedEvents.map(({event, x, cardLeft, cardHeight, markerY}, index) => {
+                            const isCardVisible = hoveredIndex === index || focusedIndex === index;
+                            const tooltipId = `life-event-tooltip-${index}`;
+                            const markerName = event.type === 'goal'
+                                ? `目標: ${event.name}、${event.age}歳、${event.category}、${event.status}`
+                                : `イベント: ${event.name}、${event.age}歳、${event.category}`;
 
                             return (
-                                <div key={`${event.age}-${event.type}-${index}`}>
+                                <div
+                                    key={`${event.age}-${event.type}-${index}`}
+                                    className="group absolute z-10"
+                                    style={{left: x, top: markerY}}
+                                    onMouseEnter={() => setHoveredIndex(index)}
+                                    onMouseLeave={() => setHoveredIndex((currentIndex) =>
+                                        currentIndex === index ? null : currentIndex
+                                    )}
+                                    onFocusCapture={() => setFocusedIndex(index)}
+                                    onBlurCapture={(event) => handleBlur(index, event)}
+                                >
                                     <span
                                         aria-hidden="true"
                                         className="absolute w-px bg-gray-400 dark:bg-gray-500"
                                         style={{
-                                            left: x,
-                                            top: AXIS_Y + 5,
+                                            left: 0,
+                                            top: AXIS_Y + 5 - markerY,
                                             height: markerY - AXIS_Y - 5,
                                         }}
-                                    />
-                                    <span
-                                        aria-hidden="true"
-                                        className={`absolute size-4 -translate-x-1/2 -translate-y-1/2 border-2 border-gray-700 bg-white dark:border-gray-200 dark:bg-gray-800 ${
-                                            event.type === 'goal' ? 'rotate-45' : 'rounded-full'
-                                        }`}
-                                        style={{left: x, top: markerY}}
                                     />
                                     <button
                                         type="button"
                                         aria-pressed={selectedEvent === event}
-                                        onClick={() => setSelectedEvent(selectedEvent === event ? null : event)}
-                                        className="absolute flex min-h-20 flex-col items-start rounded-lg border border-gray-300 bg-white p-3 text-left text-gray-900 shadow-sm hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 dark:focus-visible:outline-gray-200"
-                                        style={{
-                                            left: cardLeft,
-                                            top: cardTop,
-                                            width: CARD_WIDTH,
+                                        aria-label={markerName}
+                                        aria-describedby={isCardVisible ? tooltipId : undefined}
+                                        onClick={() => {
+                                            setSelectedEvent(selectedEvent === event ? null : event);
+                                            setFocusedIndex(index);
                                         }}
+                                        className="absolute left-0 top-0 z-20 grid size-8 -translate-x-1/2 -translate-y-1/2 cursor-pointer place-items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700 dark:focus-visible:outline-gray-200"
                                     >
-                                        <span className="w-full break-words font-semibold">{event.name}</span>
-                                        <span className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                                            {event.age}歳・{event.category}
-                                        </span>
-                                        {event.type === 'goal' && (
-                                            <span className="text-sm text-gray-600 dark:text-gray-300">
-                                                {event.status}
-                                            </span>
-                                        )}
+                                        <span
+                                            aria-hidden="true"
+                                            className={`size-4 border-2 border-gray-700 bg-white transition-transform group-hover:scale-125 dark:border-gray-200 dark:bg-gray-800 ${
+                                                event.type === 'goal' ? 'rotate-45' : 'rounded-full'
+                                            }`}
+                                        />
+                                        <span className="sr-only">{markerName}</span>
                                     </button>
+                                    {isCardVisible && (
+                                        <div
+                                            id={tooltipId}
+                                            role="tooltip"
+                                            className="absolute z-30 rounded-lg border border-gray-300 bg-white p-3 text-gray-900 shadow-xl dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 motion-reduce:animate-none animate-[life-event-popover_160ms_ease-out]"
+                                            style={{
+                                                left: cardLeft - x,
+                                                top: MARKER_SIZE,
+                                                width: CARD_WIDTH,
+                                                minHeight: cardHeight,
+                                            }}
+                                        >
+                                            <span className="block w-full break-words font-semibold">{event.name}</span>
+                                            <span className="mt-1 block text-sm text-gray-600 dark:text-gray-300">
+                                                {event.age}歳・{event.category}
+                                            </span>
+                                            {event.type === 'goal' && (
+                                                <span className="block text-sm text-gray-600 dark:text-gray-300">
+                                                    {event.status}
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })}
