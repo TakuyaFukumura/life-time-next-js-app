@@ -31,6 +31,31 @@ describe('Timeline', () => {
         expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
     });
 
+    it('現在年齢までのイベントと目標は塗りつぶし、それ以降は枠線だけで表示する', () => {
+        render(
+            <Timeline
+                events={[
+                    events[0],
+                    {...events[1], name: '現在年齢の目標', age: 29},
+                    events[1],
+                ]}
+                currentAge={29}
+            />
+        );
+
+        const elapsedEvent = screen.getByRole('button', {name: /誕生.*経過済み/});
+        expect(elapsedEvent.querySelector('[aria-hidden="true"]'))
+            .toHaveClass('bg-gray-700', 'rounded-full');
+
+        const elapsedGoal = screen.getByRole('button', {name: /現在年齢の目標.*経過済み/});
+        expect(elapsedGoal.querySelector('[aria-hidden="true"]'))
+            .toHaveClass('bg-gray-700', 'rotate-45');
+
+        const futureGoal = screen.getByRole('button', {name: /資格取得.*これから/});
+        expect(futureGoal.querySelector('[aria-hidden="true"]'))
+            .toHaveClass('bg-white', 'rotate-45');
+    });
+
     it('マーカーにカーソルを合わせるとカードを浮かび上がらせる', () => {
         render(<Timeline events={events} currentAge={29}/>);
 

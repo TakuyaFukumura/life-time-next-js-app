@@ -172,10 +172,12 @@ export default function Timeline({
                         })}
                         {positionedEvents.map(({event, x, cardLeft, cardHeight, markerY}, index) => {
                             const isCardVisible = hoveredIndex === index || focusedIndex === index;
+                            const isElapsed = event.age <= currentAge;
                             const tooltipId = `life-event-tooltip-${index}`;
+                            const periodLabel = isElapsed ? '経過済み' : 'これから';
                             const markerName = event.type === 'goal'
-                                ? `目標: ${event.name}、${event.age}歳、${event.category}、${event.status}`
-                                : `イベント: ${event.name}、${event.age}歳、${event.category}`;
+                                ? `目標: ${event.name}、${event.age}歳、${event.category}、${event.status}、${periodLabel}`
+                                : `イベント: ${event.name}、${event.age}歳、${event.category}、${periodLabel}`;
 
                             return (
                                 <div
@@ -211,7 +213,9 @@ export default function Timeline({
                                     >
                                         <span
                                             aria-hidden="true"
-                                            className={`size-4 border-2 border-gray-700 bg-white transition-transform group-hover:scale-125 dark:border-gray-200 dark:bg-gray-800 ${
+                                            className={`size-4 border-2 border-gray-700 transition-transform group-hover:scale-125 dark:border-gray-200 ${
+                                                isElapsed ? 'bg-gray-700 dark:bg-gray-200' : 'bg-white dark:bg-gray-800'
+                                            } ${
                                                 event.type === 'goal' ? 'rotate-45' : 'rounded-full'
                                             }`}
                                         />
