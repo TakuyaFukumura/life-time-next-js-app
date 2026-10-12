@@ -44,7 +44,7 @@ describe('Header', () => {
         it('ヘッダータイトルが表示される', () => {
             renderWithProvider();
 
-            expect(screen.getByText('life-time-next-js-app')).toBeInTheDocument();
+            expect(screen.getByText('life-time')).toBeInTheDocument();
         });
 
         it('ヘッダーのHTML構造が正しい', () => {
