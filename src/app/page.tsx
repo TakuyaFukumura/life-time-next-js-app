@@ -1,109 +1,39 @@
-'use client';
+import Timeline from './components/Timeline';
+import {loadLifeEvents} from '../lib/life-events';
+import type {LifeEvent} from '../lib/life-events';
 
-import {useCallback, useEffect, useRef, useState} from 'react';
-import {isErrorResponse, isMessageResponse} from '../types/api';
+export default async function Home() {
+    let events: LifeEvent[] | null;
+    try {
+        events = await loadLifeEvents();
+    } catch (error) {
+        console.error('サンプルデータの読み込みに失敗しました:', error);
+        events = null;
+    }
 
-export default function Home() {
-    const [message, setMessage] = useState<string | null>(null);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
-    const requestController = useRef<AbortController | null>(null);
-
-    const fetchMessage = useCallback(async () => {
-        requestController.current?.abort();
-        const controller = new AbortController();
-        requestController.current = controller;
-        setLoading(true);
-        setError(null);
-
-        try {
-            const response = await fetch('/api/message', {signal: controller.signal});
-            const data: unknown = await response.json();
-
-            if (!response.ok) {
-                throw new Error(
-                    isErrorResponse(data) ? data.error : 'メッセージの取得に失敗しました'
-                );
-            }
-
-            if (!isMessageResponse(data)) {
-                throw new Error('APIレスポンスの形式が不正です');
-            }
-
-            setMessage(data.message);
-        } catch (err) {
-            if (err instanceof Error && err.name === 'AbortError') {
-                return;
-            }
-            setError(err instanceof Error ? err.message : '予期しないエラーが発生しました');
-        } finally {
-            if (!controller.signal.aborted) {
-                setLoading(false);
-            }
-        }
-    }, []);
-
-    useEffect(() => {
-        // 初回表示時にAPIを取得し、取得完了後に表示状態を更新する。
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        void fetchMessage();
-        return () => {
-            requestController.current?.abort();
-        };
-    }, [fetchMessage]);
-
-    let content;
-    if (loading) {
-        content = (
-            <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <span className="ml-2 text-gray-600 dark:text-gray-400">読み込み中...</span>
-            </div>
-        );
-    } else if (error) {
-        content = (
-            <div className="text-red-600 dark:text-red-400 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                エラー: {error}
-                <button
-                    type="button"
-                    onClick={() => void fetchMessage()}
-                    className="mt-4 block mx-auto rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700"
-                >
-                    再試行
-                </button>
-            </div>
-        );
-    } else {
-        content = (
-            <div
-                className="text-2xl font-semibold text-blue-600 dark:text-blue-400 p-6 bg-blue-50 dark:bg-blue-900/20 rounded-xl border-2 border-blue-200 dark:border-blue-700">
-                {message}
-            </div>
+    if (events === null) {
+        return (
+            <main className="min-h-[calc(100vh-4rem)] px-4 py-10 sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-7xl">
+                    <p role="alert" className="rounded-lg border border-gray-300 bg-white p-5 text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                        サンプルデータを読み込めませんでした
+                    </p>
+                </div>
+            </main>
         );
     }
 
     return (
-        <div
-            className="font-sans flex items-center justify-center min-h-[calc(100vh-4rem)] bg-linear-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-            <main className="text-center p-8">
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-12 max-w-md mx-auto">
-                    <h1 className="text-4xl font-bold mb-8 text-gray-800 dark:text-gray-200">
-                        life-time-next-js-app
-                    </h1>
-
-                    <div className="mb-8">
-                        {content}
-                    </div>
-
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                        このメッセージはSQLiteデータベースから取得されています
+        <main className="min-h-[calc(100vh-4rem)] bg-gray-50 px-4 py-10 text-gray-900 dark:bg-gray-900 dark:text-gray-100 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-7xl">
+                <div className="mb-8">
+                    <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">人生のタイムライン</h1>
+                    <p className="mt-3 text-gray-600 dark:text-gray-400">
+                        0歳から100歳までの出来事と目標を表示します。
                     </p>
-
-                    <div className="text-xs text-gray-400 dark:text-gray-500">
-                        Next.js + TypeScript + Tailwind CSS + SQLite
-                    </div>
                 </div>
-            </main>
-        </div>
+                <Timeline events={events}/>
+            </div>
+        </main>
     );
 }

@@ -42,6 +42,9 @@ next-env.d.ts
 
 # database
 /data/
+!/data/
+/data/*
+!/data/life-events.csv
 *.db
 *.sqlite
 
