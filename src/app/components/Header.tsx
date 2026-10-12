@@ -36,7 +36,12 @@ export default function Header() {
                 <div className="flex justify-between items-center h-16">
                     <div className="flex items-center gap-6">
                         <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
-                            life-time
+                            <Link
+                                href="/"
+                                className="hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700 dark:focus-visible:outline-gray-200"
+                            >
+                                life-time
+                            </Link>
                         </h1>
                         <nav aria-label="メインメニュー" className="flex items-center gap-4">
                             <Link
