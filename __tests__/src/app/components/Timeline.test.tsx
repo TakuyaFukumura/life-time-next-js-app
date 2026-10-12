@@ -27,8 +27,43 @@ describe('Timeline', () => {
         expect(screen.getByText('0歳')).toBeInTheDocument();
         expect(screen.getByText('100歳')).toBeInTheDocument();
         expect(screen.getByText('現在 29歳')).toBeInTheDocument();
+        expect(screen.getByRole('spinbutton', {name: '現在の年齢'})).toHaveValue(29);
         expect(screen.getByRole('button', {name: /資格取得/})).toBeInTheDocument();
         expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('現在の年齢を編集すると現在位置とイベントの経過状態が更新される', () => {
+        render(<Timeline events={events} currentAge={29}/>);
+
+        fireEvent.change(screen.getByRole('spinbutton', {name: '現在の年齢'}), {
+            target: {value: '30'},
+        });
+
+        expect(screen.getByText('現在 30歳')).toBeInTheDocument();
+        expect(screen.getByRole('button', {name: /資格取得.*経過済み/})).toBeInTheDocument();
+    });
+
+    it('無効な年齢を確定すると最後の有効な年齢に戻す', () => {
+        render(<Timeline events={events} currentAge={29}/>);
+        const ageInput = screen.getByRole('spinbutton', {name: '現在の年齢'});
+
+        fireEvent.change(ageInput, {target: {value: '101'}});
+        expect(screen.getByText('現在 29歳')).toBeInTheDocument();
+
+        fireEvent.blur(ageInput);
+        expect(ageInput).toHaveValue(29);
+    });
+
+    it('コンポーネントを再表示すると初期年齢に戻る', () => {
+        const {unmount} = render(<Timeline events={events} currentAge={29}/>);
+        fireEvent.change(screen.getByRole('spinbutton', {name: '現在の年齢'}), {
+            target: {value: '35'},
+        });
+
+        unmount();
+        render(<Timeline events={events} currentAge={29}/>);
+
+        expect(screen.getByText('現在 29歳')).toBeInTheDocument();
     });
 
     it('現在年齢までのイベントと目標は塗りつぶし、それ以降は枠線だけで表示する', () => {
