@@ -88,9 +88,9 @@ describe('LifeEventTable', () => {
     it('データがない場合は空の状態を表示する', () => {
         render(<LifeEventTable events={[]}/>);
 
-        expect(screen.getByRole('heading', {name: '登録データ'})).toBeInTheDocument();
+        expect(screen.getByRole('heading', {name: 'データ一覧'})).toBeInTheDocument();
         expect(screen.getByText('0件')).toBeInTheDocument();
-        expect(screen.getByText('登録データはありません。')).toBeInTheDocument();
+        expect(screen.getByText('データはありません。')).toBeInTheDocument();
         expect(screen.queryByRole('table')).not.toBeInTheDocument();
     });
 

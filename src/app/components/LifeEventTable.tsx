@@ -128,7 +128,7 @@ export default function LifeEventTable({events}: {readonly events: readonly Life
         <section aria-labelledby="registered-events-heading" className="mt-12">
             <div className="mb-4 flex items-baseline justify-between gap-4">
                 <h2 id="registered-events-heading" className="text-2xl font-bold">
-                    登録データ
+                    データ一覧
                 </h2>
                 <span className="text-sm text-gray-600 dark:text-gray-400">
                     {filteredEvents.length === events.length
@@ -138,13 +138,13 @@ export default function LifeEventTable({events}: {readonly events: readonly Life
             </div>
             {events.length === 0 ? (
                 <p className="rounded-xl border border-gray-200 bg-white p-5 text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
-                    登録データはありません。
+                    データはありません。
                 </p>
             ) : (
                 <>
                     <div
                         role="search"
-                        aria-label="登録データの絞り込み"
+                        aria-label="データ一覧の絞り込み"
                         className="mb-4 grid grid-cols-1 gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:grid-cols-2 lg:grid-cols-4"
                     >
                         <label className="flex flex-col gap-1 text-sm text-gray-700 dark:text-gray-300">
@@ -315,7 +315,7 @@ export default function LifeEventTable({events}: {readonly events: readonly Life
                     {firstVisibleEvent}〜{lastVisibleEvent}件を表示 / {filteredEvents.length}件
                 </p>
                 {pageCount > 1 && filteredEvents.length > 0 && (
-                    <nav aria-label="登録データのページ操作" className="flex items-center gap-3">
+                    <nav aria-label="データ一覧のページ操作" className="flex items-center gap-3">
                         <button
                             type="button"
                             onClick={() => setRequestedPage(currentPage - 1)}

@@ -2,7 +2,7 @@ import type {Metadata} from 'next';
 
 export const metadata: Metadata = {
     title: '解説 | 人生可視化アプリ',
-    description: '人生タイムラインと登録データの見方を紹介します。',
+    description: '人生タイムラインとデータ一覧の見方を紹介します。',
 };
 
 const sectionClassName = 'rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800';
@@ -14,7 +14,7 @@ export default function GuidePage() {
                 <header className="mb-8">
                     <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">解説</h1>
                     <p className="mt-3 text-gray-600 dark:text-gray-400">
-                        人生タイムラインの見方と、登録データの確認方法を紹介します。
+                        人生タイムラインの見方と、データ一覧の確認方法を紹介します。
                     </p>
                 </header>
 
@@ -31,9 +31,9 @@ export default function GuidePage() {
                     </section>
 
                     <section aria-labelledby="table-guide" className={sectionClassName}>
-                        <h2 id="table-guide" className="text-xl font-semibold">登録データの使い方</h2>
+                        <h2 id="table-guide" className="text-xl font-semibold">データ一覧の使い方</h2>
                         <p className="mt-4 text-gray-700 dark:text-gray-300">
-                            タイムラインの下には登録データが一覧表示されます。列見出しで並べ替え、種別・カテゴリ・目標状態や名称・説明のキーワードで絞り込めます。
+                            タイムラインの下にはデータ一覧が表示されます。列見出しで並べ替え、種別・カテゴリ・目標状態や名称・説明のキーワードで絞り込めます。
                         </p>
                     </section>
                 </div>
