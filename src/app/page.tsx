@@ -32,10 +32,7 @@ export default async function Home() {
         <main className="min-h-[calc(100vh-4rem)] bg-gray-50 px-4 py-10 text-gray-900 dark:bg-gray-900 dark:text-gray-100 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-7xl">
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">人生のタイムライン</h1>
-                    <p className="mt-3 text-gray-600 dark:text-gray-400">
-                        現在年齢までの経過と、0歳から100歳までの出来事・目標を表示します。
-                    </p>
+                    <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">人生タイムライン</h1>
                 </div>
                 <Timeline events={events} currentAge={currentAge}/>
                 <LifeEventTable events={events}/>

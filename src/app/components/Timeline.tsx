@@ -95,7 +95,7 @@ export default function Timeline({
     };
 
     return (
-        <section aria-label="人生のタイムライン">
+        <section aria-label="人生タイムライン">
             <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-700 dark:text-gray-300">
                 <span>マーカーにカーソルを合わせるかタップするとカードを表示します。選択すると説明を確認できます。</span>
                 <span>濃い線は経過年数、薄い線はこれからの年数です。</span>
