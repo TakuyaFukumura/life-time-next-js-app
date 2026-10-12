@@ -1,4 +1,4 @@
-import {render, screen, within} from '@testing-library/react';
+import {fireEvent, render, screen, within} from '@testing-library/react';
 import LifeEventTable from '../../../../src/app/components/LifeEventTable';
 import type {LifeEvent} from '../../../../src/lib/life-events';
 
@@ -46,5 +46,36 @@ describe('LifeEventTable', () => {
         expect(screen.getByText('0件')).toBeInTheDocument();
         expect(screen.getByText('登録データはありません。')).toBeInTheDocument();
         expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    });
+
+    it('10件ずつページ送りでき、表示範囲とボタン状態を更新する', () => {
+        const manyEvents: LifeEvent[] = Array.from({length: 23}, (_, index) => ({
+            type: 'event',
+            name: `出来事${index + 1}`,
+            age: index,
+            category: '家族',
+            description: `説明${index + 1}`,
+        }));
+        render(<LifeEventTable events={manyEvents}/>);
+
+        const table = screen.getByRole('table');
+        const previousButton = screen.getByRole('button', {name: '前へ'});
+        const nextButton = screen.getByRole('button', {name: '次へ'});
+        expect(within(table).getAllByRole('row')).toHaveLength(11);
+        expect(screen.getByText('1〜10件を表示 / 23件')).toBeInTheDocument();
+        expect(previousButton).toBeDisabled();
+
+        fireEvent.click(nextButton);
+        expect(within(table).getAllByRole('row')).toHaveLength(11);
+        expect(screen.getByText('11〜20件を表示 / 23件')).toBeInTheDocument();
+        expect(within(table).getByText('出来事11')).toBeInTheDocument();
+
+        fireEvent.click(nextButton);
+        expect(within(table).getAllByRole('row')).toHaveLength(4);
+        expect(screen.getByText('21〜23件を表示 / 23件')).toBeInTheDocument();
+        expect(nextButton).toBeDisabled();
+
+        fireEvent.click(previousButton);
+        expect(screen.getByText('11〜20件を表示 / 23件')).toBeInTheDocument();
     });
 });

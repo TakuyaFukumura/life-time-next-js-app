@@ -1,7 +1,21 @@
+'use client';
+
+import {useState} from 'react';
 import type {LifeEvent} from '../../lib/life-events';
 
+const PAGE_SIZE = 10;
+
 export default function LifeEventTable({events}: {readonly events: readonly LifeEvent[]}) {
+    const [requestedPage, setRequestedPage] = useState(1);
     const orderedEvents = [...events].sort((first, second) => first.age - second.age);
+    const pageCount = Math.ceil(orderedEvents.length / PAGE_SIZE);
+    const currentPage = Math.min(requestedPage, Math.max(pageCount, 1));
+    const pageEvents = orderedEvents.slice(
+        (currentPage - 1) * PAGE_SIZE,
+        currentPage * PAGE_SIZE,
+    );
+    const firstVisibleEvent = orderedEvents.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+    const lastVisibleEvent = Math.min(currentPage * PAGE_SIZE, orderedEvents.length);
 
     return (
         <section aria-labelledby="registered-events-heading" className="mt-12">
@@ -34,9 +48,9 @@ export default function LifeEventTable({events}: {readonly events: readonly Life
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                            {orderedEvents.map((event, index) => (
+                            {pageEvents.map((event, index) => (
                                 <tr
-                                    key={`${event.age}-${event.type}-${index}`}
+                                    key={`${event.age}-${event.type}-${(currentPage - 1) * PAGE_SIZE + index}`}
                                     className="text-gray-800 dark:text-gray-200"
                                 >
                                     <td className="whitespace-nowrap px-4 py-3">
@@ -61,6 +75,34 @@ export default function LifeEventTable({events}: {readonly events: readonly Life
                     </table>
                 </div>
             )}
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                <p aria-live="polite" className="text-sm text-gray-600 dark:text-gray-400">
+                    {firstVisibleEvent}〜{lastVisibleEvent}件を表示 / {events.length}件
+                </p>
+                {pageCount > 1 && (
+                    <nav aria-label="登録データのページ操作" className="flex items-center gap-3">
+                        <button
+                            type="button"
+                            onClick={() => setRequestedPage(currentPage - 1)}
+                            disabled={currentPage === 1}
+                            className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+                        >
+                            前へ
+                        </button>
+                        <span className="min-w-20 text-center text-sm text-gray-700 dark:text-gray-300">
+                            {currentPage} / {pageCount} ページ
+                        </span>
+                        <button
+                            type="button"
+                            onClick={() => setRequestedPage(currentPage + 1)}
+                            disabled={currentPage === pageCount}
+                            className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+                        >
+                            次へ
+                        </button>
+                    </nav>
+                )}
+            </div>
         </section>
     );
 }
