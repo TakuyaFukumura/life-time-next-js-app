@@ -1,4 +1,5 @@
 import Timeline from './components/Timeline';
+import LifeEventTable from './components/LifeEventTable';
 import {loadLifeEvents} from '../lib/life-events';
 import type {LifeEvent} from '../lib/life-events';
 
@@ -33,6 +34,7 @@ export default async function Home() {
                     </p>
                 </div>
                 <Timeline events={events}/>
+                <LifeEventTable events={events}/>
             </div>
         </main>
     );
