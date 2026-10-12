@@ -135,9 +135,6 @@ export default function Timeline({
                         />
                         <span>歳</span>
                     </div>
-                    <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                        再読み込みすると初期値に戻ります。
-                    </p>
                 </div>
                 <span role="img" aria-label="イベントは丸、目標はひし形">
                     <span aria-hidden="true">●</span> イベント
