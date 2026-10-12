@@ -12,7 +12,7 @@ describe('parseLifeEventsCsv', () => {
 
     it('イベントと目標を解析し、年齢を数値に変換する', () => {
         const events = parseLifeEventsCsv(
-            `${headers}\nevent,誕生,0,家族,,\ngoal,目標,30,仕事,"説明, 補足",進行中\n`
+            `${headers}\nevent,誕生,0,家族,,\nevent,大学卒業,22,学業,,\ngoal,目標,30,仕事,"説明, 補足",進行中\n`
         );
 
         expect(events).toEqual([
@@ -21,6 +21,13 @@ describe('parseLifeEventsCsv', () => {
                 name: '誕生',
                 age: 0,
                 category: '家族',
+                description: '',
+            },
+            {
+                type: 'event',
+                name: '大学卒業',
+                age: 22,
+                category: '学業',
                 description: '',
             },
             {

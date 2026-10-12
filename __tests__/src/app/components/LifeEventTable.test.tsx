@@ -159,6 +159,26 @@ describe('LifeEventTable', () => {
         expect(screen.getByRole('combobox', {name: '目標状態'})).toHaveValue('all');
     });
 
+    it('学業カテゴリでデータを絞り込む', () => {
+        const academicEvent: LifeEvent = {
+            type: 'event',
+            name: '大学卒業',
+            age: 22,
+            category: '学業',
+            description: '',
+        };
+        render(<LifeEventTable events={[...events, academicEvent]}/>);
+
+        fireEvent.change(screen.getByRole('combobox', {name: 'カテゴリ'}), {
+            target: {value: '学業'},
+        });
+
+        expect(screen.getByRole('table')).toHaveTextContent('大学卒業');
+        expect(screen.getByText('1件 / 3件')).toBeInTheDocument();
+        expect(screen.queryByText('資格取得')).not.toBeInTheDocument();
+        expect(screen.queryByText('誕生')).not.toBeInTheDocument();
+    });
+
     it('名称または説明のキーワードで検索し、条件変更後は1ページ目へ戻る', () => {
         const manyEvents: LifeEvent[] = Array.from({length: 23}, (_, index) => ({
             type: 'event',
