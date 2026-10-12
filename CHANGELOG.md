@@ -6,3 +6,7 @@
 このプロジェクトは [Semantic Versioning](https://semver.org/lang/ja/) に従っています。
 
 ## [Unreleased]
+
+### Added
+
+- 登録データ一覧の各列ヘッダーから昇順・降順にソートできる機能

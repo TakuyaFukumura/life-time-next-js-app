@@ -4,9 +4,79 @@ import {useState} from 'react';
 import type {LifeEvent} from '../../lib/life-events';
 
 const PAGE_SIZE = 10;
+type SortKey = 'type' | 'name' | 'age' | 'category' | 'description' | 'status';
+type SortDirection = 'asc' | 'desc';
+
+const japaneseCollator = new Intl.Collator('ja', {numeric: true, sensitivity: 'base'});
+
+function compareEvents(first: LifeEvent, second: LifeEvent, key: SortKey): number {
+    switch (key) {
+        case 'type':
+            return japaneseCollator.compare(
+                first.type === 'event' ? 'イベント' : '目標',
+                second.type === 'event' ? 'イベント' : '目標',
+            );
+        case 'name':
+            return japaneseCollator.compare(first.name, second.name);
+        case 'age':
+            return first.age - second.age;
+        case 'category':
+            return japaneseCollator.compare(first.category, second.category);
+        case 'description':
+            return japaneseCollator.compare(first.description || '—', second.description || '—');
+        case 'status':
+            return japaneseCollator.compare(
+                first.type === 'goal' ? first.status : '—',
+                second.type === 'goal' ? second.status : '—',
+            );
+    }
+}
+
+function SortableHeader({
+    label,
+    column,
+    sortKey,
+    sortDirection,
+    align = 'left',
+    onSort,
+}: {
+    readonly label: string;
+    readonly column: SortKey;
+    readonly sortKey: SortKey;
+    readonly sortDirection: SortDirection;
+    readonly align?: 'left' | 'right';
+    readonly onSort: (column: SortKey) => void;
+}) {
+    const isActive = sortKey === column;
+    const directionLabel = sortDirection === 'asc' ? '昇順' : '降順';
+
+    return (
+        <th
+            scope="col"
+            aria-sort={isActive ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+            className={`whitespace-nowrap px-4 py-3 ${align === 'right' ? 'text-right' : ''}`}
+        >
+            <button
+                type="button"
+                onClick={() => onSort(column)}
+                aria-label={isActive ? `${label}を${directionLabel}で並べ替え` : `${label}で並べ替え`}
+                className={`inline-flex w-full items-center gap-1 font-semibold hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700 dark:focus-visible:outline-gray-200 ${
+                    align === 'right' ? 'justify-end' : 'justify-start'
+                }`}
+            >
+                <span>{label}</span>
+                <span aria-hidden="true">
+                    {isActive ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
+                </span>
+            </button>
+        </th>
+    );
+}
 
 export default function LifeEventTable({events}: {readonly events: readonly LifeEvent[]}) {
     const [requestedPage, setRequestedPage] = useState(1);
+    const [sortKey, setSortKey] = useState<SortKey>('age');
+    const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
     const [typeFilter, setTypeFilter] = useState<'all' | 'event' | 'goal'>('all');
     const [categoryFilter, setCategoryFilter] = useState<'all' | '仕事' | '家族'>('all');
     const [statusFilter, setStatusFilter] = useState<'all' | '未着手' | '進行中' | '達成' | '中止'>('all');
@@ -21,9 +91,13 @@ export default function LifeEventTable({events}: {readonly events: readonly Life
             event.name.toLocaleLowerCase('ja').includes(normalizedKeyword) ||
             event.description.toLocaleLowerCase('ja').includes(normalizedKeyword))
     ));
-    const pageCount = Math.ceil(filteredEvents.length / PAGE_SIZE);
+    const sortedEvents = [...filteredEvents].sort((first, second) => {
+        const comparison = compareEvents(first, second, sortKey);
+        return sortDirection === 'asc' ? comparison : -comparison;
+    });
+    const pageCount = Math.ceil(sortedEvents.length / PAGE_SIZE);
     const currentPage = Math.min(requestedPage, Math.max(pageCount, 1));
-    const pageEvents = filteredEvents.slice(
+    const pageEvents = sortedEvents.slice(
         (currentPage - 1) * PAGE_SIZE,
         currentPage * PAGE_SIZE,
     );
@@ -37,6 +111,16 @@ export default function LifeEventTable({events}: {readonly events: readonly Life
         setCategoryFilter('all');
         setStatusFilter('all');
         setKeyword('');
+        setRequestedPage(1);
+    };
+
+    const handleSort = (column: SortKey) => {
+        if (sortKey === column) {
+            setSortDirection((direction) => direction === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortKey(column);
+            setSortDirection('asc');
+        }
         setRequestedPage(1);
     };
 
@@ -147,16 +231,53 @@ export default function LifeEventTable({events}: {readonly events: readonly Life
                         <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
                             <table className="w-full min-w-[760px] border-collapse text-left text-sm">
                                 <caption className="sr-only">
-                                    年齢順に並んだ人生のイベントと目標
+                                    人生のイベントと目標一覧
                                 </caption>
                                 <thead className="bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200">
                                     <tr>
-                                        <th scope="col" className="whitespace-nowrap px-4 py-3 font-semibold">種別</th>
-                                        <th scope="col" className="px-4 py-3 font-semibold">名称</th>
-                                        <th scope="col" className="whitespace-nowrap px-4 py-3 text-right font-semibold">年齢</th>
-                                        <th scope="col" className="whitespace-nowrap px-4 py-3 font-semibold">カテゴリ</th>
-                                        <th scope="col" className="px-4 py-3 font-semibold">説明</th>
-                                        <th scope="col" className="whitespace-nowrap px-4 py-3 font-semibold">状態</th>
+                                        <SortableHeader
+                                            label="種別"
+                                            column="type"
+                                            sortKey={sortKey}
+                                            sortDirection={sortDirection}
+                                            onSort={handleSort}
+                                        />
+                                        <SortableHeader
+                                            label="名称"
+                                            column="name"
+                                            sortKey={sortKey}
+                                            sortDirection={sortDirection}
+                                            onSort={handleSort}
+                                        />
+                                        <SortableHeader
+                                            label="年齢"
+                                            column="age"
+                                            sortKey={sortKey}
+                                            sortDirection={sortDirection}
+                                            align="right"
+                                            onSort={handleSort}
+                                        />
+                                        <SortableHeader
+                                            label="カテゴリ"
+                                            column="category"
+                                            sortKey={sortKey}
+                                            sortDirection={sortDirection}
+                                            onSort={handleSort}
+                                        />
+                                        <SortableHeader
+                                            label="説明"
+                                            column="description"
+                                            sortKey={sortKey}
+                                            sortDirection={sortDirection}
+                                            onSort={handleSort}
+                                        />
+                                        <SortableHeader
+                                            label="状態"
+                                            column="status"
+                                            sortKey={sortKey}
+                                            sortDirection={sortDirection}
+                                            onSort={handleSort}
+                                        />
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">

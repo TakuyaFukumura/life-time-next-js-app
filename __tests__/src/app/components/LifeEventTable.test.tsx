@@ -24,9 +24,13 @@ describe('LifeEventTable', () => {
     it('全項目を年齢順の表として表示する', () => {
         render(<LifeEventTable events={events}/>);
 
-        const table = screen.getByRole('table', {name: '年齢順に並んだ人生のイベントと目標'});
-        expect(within(table).getAllByRole('columnheader').map((header) => header.textContent))
+        const table = screen.getByRole('table', {name: '人生のイベントと目標一覧'});
+        expect(within(table).getAllByRole('columnheader').map(
+            (header) => header.querySelector('button span')?.textContent,
+        ))
             .toEqual(['種別', '名称', '年齢', 'カテゴリ', '説明', '状態']);
+        expect(within(table).getByRole('button', {name: '年齢を昇順で並べ替え'}).closest('th'))
+            .toHaveAttribute('aria-sort', 'ascending');
 
         const rows = within(table).getAllByRole('row');
         expect(rows[1]).toHaveTextContent('誕生');
@@ -37,6 +41,48 @@ describe('LifeEventTable', () => {
         expect(rows[2]).toHaveTextContent('30歳');
         expect(rows[2]).toHaveTextContent('学習を続ける');
         expect(rows[2]).toHaveTextContent('進行中');
+    });
+
+    it('列ヘッダーで昇順・降順を切り替え、別の列は昇順で並べ替える', () => {
+        const unsortedEvents: LifeEvent[] = [
+            {
+                type: 'goal',
+                name: 'Beta',
+                age: 20,
+                category: '仕事',
+                description: 'Zulu description',
+                status: '進行中',
+            },
+            {
+                type: 'event',
+                name: 'Alpha',
+                age: 10,
+                category: '家族',
+                description: 'Alpha description',
+            },
+        ];
+        render(<LifeEventTable events={unsortedEvents}/>);
+
+        const table = screen.getByRole('table');
+        const rowNames = () => within(table).getAllByRole('row').slice(1)
+            .map((row) => within(row).getAllByRole('cell')[1].textContent);
+
+        expect(rowNames()).toEqual(['Alpha', 'Beta']);
+
+        fireEvent.click(screen.getByRole('button', {name: '名称で並べ替え'}));
+        expect(rowNames()).toEqual(['Alpha', 'Beta']);
+        expect(within(table).getByRole('button', {name: '名称を昇順で並べ替え'}).closest('th'))
+            .toHaveAttribute('aria-sort', 'ascending');
+
+        fireEvent.click(screen.getByRole('button', {name: '名称を昇順で並べ替え'}));
+        expect(rowNames()).toEqual(['Beta', 'Alpha']);
+        expect(within(table).getByRole('button', {name: '名称を降順で並べ替え'}).closest('th'))
+            .toHaveAttribute('aria-sort', 'descending');
+
+        fireEvent.click(screen.getByRole('button', {name: '年齢で並べ替え'}));
+        expect(rowNames()).toEqual(['Alpha', 'Beta']);
+        expect(within(table).getByRole('button', {name: '年齢を昇順で並べ替え'}).closest('th'))
+            .toHaveAttribute('aria-sort', 'ascending');
     });
 
     it('データがない場合は空の状態を表示する', () => {
@@ -77,6 +123,9 @@ describe('LifeEventTable', () => {
 
         fireEvent.click(previousButton);
         expect(screen.getByText('11〜20件を表示 / 23件')).toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole('button', {name: '名称で並べ替え'}));
+        expect(screen.getByText('1〜10件を表示 / 23件')).toBeInTheDocument();
     });
 
     it('種別・カテゴリ・目標状態の条件を組み合わせて絞り込む', () => {
