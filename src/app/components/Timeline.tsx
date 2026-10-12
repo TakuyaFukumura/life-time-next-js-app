@@ -73,11 +73,13 @@ export default function Timeline({
     readonly events: readonly LifeEvent[];
     readonly currentAge: number;
 }) {
+    const [currentAgeInput, setCurrentAgeInput] = useState(String(currentAge));
+    const [displayAge, setDisplayAge] = useState(currentAge);
     const [selectedEvent, setSelectedEvent] = useState<LifeEvent | null>(null);
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
     const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
     const positionedEvents = layoutEvents(events);
-    const currentAgeX = getAgeX(currentAge);
+    const currentAgeX = getAgeX(displayAge);
     const currentAgeLabelLeft = Math.max(
         0,
         Math.min(currentAgeX - 50, TIMELINE_WIDTH - 100),
@@ -94,11 +96,46 @@ export default function Timeline({
         }
     };
 
+    const handleCurrentAgeChange = (value: string) => {
+        setCurrentAgeInput(value);
+        if (!/^\d+$/.test(value)) {
+            return;
+        }
+
+        const age = Number(value);
+        if (age <= 100) {
+            setDisplayAge(age);
+        }
+    };
+
+    const handleCurrentAgeBlur = () => {
+        if (!/^\d+$/.test(currentAgeInput) || Number(currentAgeInput) > 100) {
+            setCurrentAgeInput(String(displayAge));
+        }
+    };
+
     return (
-        <section aria-label="人生のタイムライン">
-            <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-700 dark:text-gray-300">
-                <span>マーカーにカーソルを合わせるかタップするとカードを表示します。選択すると説明を確認できます。</span>
-                <span>濃い線は経過年数、薄い線はこれからの年数です。</span>
+        <section aria-label="人生タイムライン">
+            <div className="mb-4 flex flex-wrap items-end justify-between gap-4 text-sm text-gray-700 dark:text-gray-300">
+                <div>
+                    <label htmlFor="current-age-input" className="mb-1 block font-medium">
+                        現在の年齢
+                    </label>
+                    <div className="flex items-center gap-2">
+                        <input
+                            id="current-age-input"
+                            type="number"
+                            min={0}
+                            max={100}
+                            step={1}
+                            value={currentAgeInput}
+                            onChange={(event) => handleCurrentAgeChange(event.currentTarget.value)}
+                            onBlur={handleCurrentAgeBlur}
+                            className="w-24 rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus-visible:outline-gray-200"
+                        />
+                        <span>歳</span>
+                    </div>
+                </div>
                 <span role="img" aria-label="イベントは丸、目標はひし形">
                     <span aria-hidden="true">●</span> イベント
                     <span className="ml-4" aria-hidden="true">◆</span> 目標
@@ -150,7 +187,7 @@ export default function Timeline({
                                 textAlign: 'center',
                             }}
                         >
-                            現在 {currentAge}歳
+                            現在 {displayAge}歳
                         </span>
                         {Array.from({length: 11}, (_, index) => {
                             const age = index * 10;
@@ -172,7 +209,7 @@ export default function Timeline({
                         })}
                         {positionedEvents.map(({event, x, cardLeft, cardHeight, markerY}, index) => {
                             const isCardVisible = hoveredIndex === index || focusedIndex === index;
-                            const isElapsed = event.age <= currentAge;
+                            const isElapsed = event.age <= displayAge;
                             const tooltipId = `life-event-tooltip-${index}`;
                             const periodLabel = isElapsed ? '経過済み' : 'これから';
                             const markerName = event.type === 'goal'

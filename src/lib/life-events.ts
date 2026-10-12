@@ -1,6 +1,8 @@
 import {readFile} from 'node:fs/promises';
 import path from 'node:path';
 import {parse} from 'csv-parse/sync';
+import {LIFE_EVENT_CATEGORIES} from './life-event-categories';
+import type {LifeEventCategory} from './life-event-categories';
 
 export const LIFE_EVENT_CSV_HEADERS = [
     'type',
@@ -12,7 +14,8 @@ export const LIFE_EVENT_CSV_HEADERS = [
 ] as const;
 
 export type LifeEventType = 'event' | 'goal';
-export type LifeEventCategory = '仕事' | '家族';
+export {LIFE_EVENT_CATEGORIES} from './life-event-categories';
+export type {LifeEventCategory} from './life-event-categories';
 export type GoalStatus = '未着手' | '進行中' | '達成' | '中止';
 
 type LifeEventBase = {
@@ -26,11 +29,10 @@ export type LifeEvent =
     | (LifeEventBase & {type: 'event'; status?: never})
     | (LifeEventBase & {type: 'goal'; status: GoalStatus});
 
-const categories: readonly LifeEventCategory[] = ['仕事', '家族'];
 const goalStatuses: readonly GoalStatus[] = ['未着手', '進行中', '達成', '中止'];
 
 function isCategory(value: string): value is LifeEventCategory {
-    return categories.includes(value as LifeEventCategory);
+    return LIFE_EVENT_CATEGORIES.includes(value as LifeEventCategory);
 }
 
 function isGoalStatus(value: string): value is GoalStatus {

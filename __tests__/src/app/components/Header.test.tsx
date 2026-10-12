@@ -47,6 +47,24 @@ describe('Header', () => {
             expect(screen.getByText('life-time')).toBeInTheDocument();
         });
 
+        it('ヘッダータイトルから初期画面へ移動できる', () => {
+            renderWithProvider();
+
+            expect(screen.getByRole('link', {name: 'life-time'})).toHaveAttribute('href', '/');
+        });
+
+        it('解説ページへのリンクが表示される', () => {
+            renderWithProvider();
+
+            expect(screen.getByRole('link', {name: '解説'})).toHaveAttribute('href', '/guide');
+        });
+
+        it('初期画面へのリンクが表示される', () => {
+            renderWithProvider();
+
+            expect(screen.getByRole('link', {name: 'ホーム'})).toHaveAttribute('href', '/');
+        });
+
         it('ヘッダーのHTML構造が正しい', () => {
             renderWithProvider();
 

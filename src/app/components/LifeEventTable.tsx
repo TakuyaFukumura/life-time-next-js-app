@@ -1,7 +1,8 @@
 'use client';
 
 import {useState} from 'react';
-import type {LifeEvent} from '../../lib/life-events';
+import {LIFE_EVENT_CATEGORIES} from '../../lib/life-event-categories';
+import type {LifeEvent, LifeEventCategory} from '../../lib/life-events';
 
 const PAGE_SIZE = 10;
 type SortKey = 'type' | 'name' | 'age' | 'category' | 'description' | 'status';
@@ -78,7 +79,7 @@ export default function LifeEventTable({events}: {readonly events: readonly Life
     const [sortKey, setSortKey] = useState<SortKey>('age');
     const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
     const [typeFilter, setTypeFilter] = useState<'all' | 'event' | 'goal'>('all');
-    const [categoryFilter, setCategoryFilter] = useState<'all' | '仕事' | '家族'>('all');
+    const [categoryFilter, setCategoryFilter] = useState<'all' | LifeEventCategory>('all');
     const [statusFilter, setStatusFilter] = useState<'all' | '未着手' | '進行中' | '達成' | '中止'>('all');
     const [keyword, setKeyword] = useState('');
     const orderedEvents = [...events].sort((first, second) => first.age - second.age);
@@ -128,7 +129,7 @@ export default function LifeEventTable({events}: {readonly events: readonly Life
         <section aria-labelledby="registered-events-heading" className="mt-12">
             <div className="mb-4 flex items-baseline justify-between gap-4">
                 <h2 id="registered-events-heading" className="text-2xl font-bold">
-                    登録データ
+                    データ一覧
                 </h2>
                 <span className="text-sm text-gray-600 dark:text-gray-400">
                     {filteredEvents.length === events.length
@@ -138,13 +139,13 @@ export default function LifeEventTable({events}: {readonly events: readonly Life
             </div>
             {events.length === 0 ? (
                 <p className="rounded-xl border border-gray-200 bg-white p-5 text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
-                    登録データはありません。
+                    データはありません。
                 </p>
             ) : (
                 <>
                     <div
                         role="search"
-                        aria-label="登録データの絞り込み"
+                        aria-label="データ一覧の絞り込み"
                         className="mb-4 grid grid-cols-1 gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:grid-cols-2 lg:grid-cols-4"
                     >
                         <label className="flex flex-col gap-1 text-sm text-gray-700 dark:text-gray-300">
@@ -182,14 +183,16 @@ export default function LifeEventTable({events}: {readonly events: readonly Life
                                 value={categoryFilter}
                                 onChange={(event) => {
                                     const value = event.currentTarget.value;
-                                    setCategoryFilter(value === '仕事' || value === '家族' ? value : 'all');
+                                    const category = LIFE_EVENT_CATEGORIES.find((item) => item === value);
+                                    setCategoryFilter(category ?? 'all');
                                     setRequestedPage(1);
                                 }}
                                 className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:focus-visible:outline-gray-200"
                             >
                                 <option value="all">すべて</option>
-                                <option value="仕事">仕事</option>
-                                <option value="家族">家族</option>
+                                {LIFE_EVENT_CATEGORIES.map((category) => (
+                                    <option key={category} value={category}>{category}</option>
+                                ))}
                             </select>
                         </label>
                         <label className="flex flex-col gap-1 text-sm text-gray-700 dark:text-gray-300">
@@ -315,7 +318,7 @@ export default function LifeEventTable({events}: {readonly events: readonly Life
                     {firstVisibleEvent}〜{lastVisibleEvent}件を表示 / {filteredEvents.length}件
                 </p>
                 {pageCount > 1 && filteredEvents.length > 0 && (
-                    <nav aria-label="登録データのページ操作" className="flex items-center gap-3">
+                    <nav aria-label="データ一覧のページ操作" className="flex items-center gap-3">
                         <button
                             type="button"
                             onClick={() => setRequestedPage(currentPage - 1)}
