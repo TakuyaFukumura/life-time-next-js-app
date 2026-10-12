@@ -78,4 +78,61 @@ describe('LifeEventTable', () => {
         fireEvent.click(previousButton);
         expect(screen.getByText('11〜20件を表示 / 23件')).toBeInTheDocument();
     });
+
+    it('種別・カテゴリ・目標状態の条件を組み合わせて絞り込む', () => {
+        render(<LifeEventTable events={events}/>);
+
+        fireEvent.change(screen.getByRole('combobox', {name: '種別'}), {
+            target: {value: 'goal'},
+        });
+        fireEvent.change(screen.getByRole('combobox', {name: 'カテゴリ'}), {
+            target: {value: '仕事'},
+        });
+        fireEvent.change(screen.getByRole('combobox', {name: '目標状態'}), {
+            target: {value: '進行中'},
+        });
+
+        expect(screen.getByRole('table').querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(screen.getByText('1件 / 2件')).toBeInTheDocument();
+        expect(screen.getByText('資格取得')).toBeInTheDocument();
+        expect(screen.queryByText('誕生')).not.toBeInTheDocument();
+
+        fireEvent.change(screen.getByRole('combobox', {name: '目標状態'}), {
+            target: {value: '達成'},
+        });
+        expect(screen.getByText('条件に一致するデータがありません。')).toBeInTheDocument();
+        expect(screen.getByText('0〜0件を表示 / 0件')).toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole('button', {name: '条件をクリア'}));
+        expect(screen.getByRole('table').querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(screen.getByRole('combobox', {name: '種別'})).toHaveValue('all');
+        expect(screen.getByRole('combobox', {name: 'カテゴリ'})).toHaveValue('all');
+        expect(screen.getByRole('combobox', {name: '目標状態'})).toHaveValue('all');
+    });
+
+    it('名称または説明のキーワードで検索し、条件変更後は1ページ目へ戻る', () => {
+        const manyEvents: LifeEvent[] = Array.from({length: 23}, (_, index) => ({
+            type: 'event',
+            name: `出来事${index + 1}`,
+            age: index,
+            category: '家族',
+            description: `説明${index + 1}`,
+        }));
+        render(<LifeEventTable events={manyEvents}/>);
+
+        fireEvent.click(screen.getByRole('button', {name: '次へ'}));
+        expect(screen.getByText('11〜20件を表示 / 23件')).toBeInTheDocument();
+
+        fireEvent.change(screen.getByRole('searchbox', {name: 'キーワード'}), {
+            target: {value: '出来事1'},
+        });
+        expect(screen.getByText('1〜10件を表示 / 11件')).toBeInTheDocument();
+        expect(screen.getByRole('table').querySelectorAll('tbody tr')).toHaveLength(10);
+
+        fireEvent.change(screen.getByRole('searchbox', {name: 'キーワード'}), {
+            target: {value: '説明20'},
+        });
+        expect(screen.getByText('1〜1件を表示 / 1件')).toBeInTheDocument();
+        expect(screen.getByText('出来事20')).toBeInTheDocument();
+    });
 });
