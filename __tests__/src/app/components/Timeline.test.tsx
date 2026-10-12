@@ -22,16 +22,17 @@ const events: LifeEvent[] = [
 
 describe('Timeline', () => {
     it('初期状態ではカードを表示せず、年齢目盛りとマーカーを表示する', () => {
-        render(<Timeline events={events}/>);
+        render(<Timeline events={events} currentAge={29}/>);
 
         expect(screen.getByText('0歳')).toBeInTheDocument();
         expect(screen.getByText('100歳')).toBeInTheDocument();
+        expect(screen.getByText('現在 29歳')).toBeInTheDocument();
         expect(screen.getByRole('button', {name: /資格取得/})).toBeInTheDocument();
         expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
     });
 
     it('マーカーにカーソルを合わせるとカードを浮かび上がらせる', () => {
-        render(<Timeline events={events}/>);
+        render(<Timeline events={events} currentAge={29}/>);
 
         fireEvent.mouseEnter(screen.getByRole('button', {name: /資格取得/}));
 
@@ -42,7 +43,7 @@ describe('Timeline', () => {
     });
 
     it('キーボードでマーカーにフォーカスするとカードを表示する', () => {
-        render(<Timeline events={events}/>);
+        render(<Timeline events={events} currentAge={29}/>);
 
         const marker = screen.getByRole('button', {name: /誕生/});
         fireEvent.focus(marker);
@@ -53,7 +54,7 @@ describe('Timeline', () => {
     });
 
     it('項目を選択すると説明を表示し、再度選択すると閉じる', () => {
-        render(<Timeline events={events}/>);
+        render(<Timeline events={events} currentAge={29}/>);
 
         fireEvent.click(screen.getByRole('button', {name: /誕生/}));
         expect(screen.getByText('サンプルの説明')).toBeInTheDocument();
@@ -65,6 +66,7 @@ describe('Timeline', () => {
     it('同じ年齢の項目を同じ横位置で縦にずらして表示する', () => {
         render(
             <Timeline
+                currentAge={29}
                 events={[
                     events[0],
                     {...events[1], age: 0},
@@ -80,6 +82,7 @@ describe('Timeline', () => {
     it('年齢が近いマーカーが重ならないよう縦にずらす', () => {
         render(
             <Timeline
+                currentAge={29}
                 events={[
                     events[0],
                     {...events[1], age: 1},
@@ -92,7 +95,7 @@ describe('Timeline', () => {
     });
 
     it('項目がない場合は空の状態を表示する', () => {
-        render(<Timeline events={[]}/>);
+        render(<Timeline events={[]} currentAge={29}/>);
 
         expect(screen.getByText('表示できる項目がありません。')).toBeInTheDocument();
     });

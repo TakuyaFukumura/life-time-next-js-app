@@ -21,6 +21,11 @@ function getNameLineCount(name: string): number {
     return Math.max(1, Math.ceil(textWidth / (CARD_WIDTH - 24)));
 }
 
+function getAgeX(age: number): number {
+    return HORIZONTAL_PADDING +
+        (age / 100) * (TIMELINE_WIDTH - HORIZONTAL_PADDING * 2);
+}
+
 type PositionedEvent = {
     event: LifeEvent;
     x: number;
@@ -37,8 +42,7 @@ function layoutEvents(events: readonly LifeEvent[]): PositionedEvent[] {
     const laneLastX: number[] = [];
 
     return sorted.map(({event}) => {
-        const x = HORIZONTAL_PADDING +
-            (event.age / 100) * (TIMELINE_WIDTH - HORIZONTAL_PADDING * 2);
+        const x = getAgeX(event.age);
         const cardLeft = Math.max(0, Math.min(x - CARD_WIDTH / 2, TIMELINE_WIDTH - CARD_WIDTH));
         let lane = laneLastX.findIndex((lastX) => x - lastX >= MARKER_SIZE + 4);
         if (lane === -1) {
@@ -57,16 +61,27 @@ function layoutEvents(events: readonly LifeEvent[]): PositionedEvent[] {
             cardLeft,
             lane,
             cardHeight,
-            markerY: AXIS_Y + 17 + lane * MARKER_LANE_HEIGHT,
+            markerY: AXIS_Y + 54 + lane * MARKER_LANE_HEIGHT,
         };
     });
 }
 
-export default function Timeline({events}: {readonly events: readonly LifeEvent[]}) {
+export default function Timeline({
+    events,
+    currentAge,
+}: {
+    readonly events: readonly LifeEvent[];
+    readonly currentAge: number;
+}) {
     const [selectedEvent, setSelectedEvent] = useState<LifeEvent | null>(null);
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
     const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
     const positionedEvents = layoutEvents(events);
+    const currentAgeX = getAgeX(currentAge);
+    const currentAgeLabelLeft = Math.max(
+        0,
+        Math.min(currentAgeX - 50, TIMELINE_WIDTH - 100),
+    );
     const height = Math.max(
         260,
         ...positionedEvents.map(({markerY, cardHeight}) => markerY + cardHeight + 40),
@@ -83,6 +98,7 @@ export default function Timeline({events}: {readonly events: readonly LifeEvent[
         <section aria-label="人生のタイムライン">
             <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-700 dark:text-gray-300">
                 <span>マーカーにカーソルを合わせるかタップするとカードを表示します。選択すると説明を確認できます。</span>
+                <span>濃い線は経過年数、薄い線はこれからの年数です。</span>
                 <span role="img" aria-label="イベントは丸、目標はひし形">
                     <span aria-hidden="true">●</span> イベント
                     <span className="ml-4" aria-hidden="true">◆</span> 目標
@@ -100,17 +116,45 @@ export default function Timeline({events}: {readonly events: readonly LifeEvent[
                     <div className="relative" style={{width: TIMELINE_WIDTH, height}}>
                         <div
                             aria-hidden="true"
-                            className="absolute h-0.5 bg-gray-500 dark:bg-gray-400"
+                            className="absolute h-0.5 bg-gray-300 dark:bg-gray-600"
                             style={{
                                 left: HORIZONTAL_PADDING,
                                 right: HORIZONTAL_PADDING,
                                 top: AXIS_Y,
                             }}
                         />
+                        <div
+                            aria-hidden="true"
+                            className="absolute h-0.5 bg-gray-700 dark:bg-gray-200"
+                            style={{
+                                left: HORIZONTAL_PADDING,
+                                width: currentAgeX - HORIZONTAL_PADDING,
+                                top: AXIS_Y,
+                            }}
+                        />
+                        <div
+                            aria-hidden="true"
+                            className="absolute z-20 w-0.5 bg-gray-700 dark:bg-gray-200"
+                            style={{
+                                left: currentAgeX,
+                                top: AXIS_Y - 4,
+                                height: 32,
+                            }}
+                        />
+                        <span
+                            className="absolute z-30 whitespace-nowrap rounded-md border border-gray-300 bg-white px-2 py-1 text-xs font-semibold text-gray-800 shadow-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                            style={{
+                                left: currentAgeLabelLeft,
+                                top: AXIS_Y + 20,
+                                width: 100,
+                                textAlign: 'center',
+                            }}
+                        >
+                            現在 {currentAge}歳
+                        </span>
                         {Array.from({length: 11}, (_, index) => {
                             const age = index * 10;
-                            const x = HORIZONTAL_PADDING +
-                                (age / 100) * (TIMELINE_WIDTH - HORIZONTAL_PADDING * 2);
+                            const x = getAgeX(age);
 
                             return (
                                 <div
