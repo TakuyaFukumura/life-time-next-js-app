@@ -8,6 +8,21 @@ describe('parseLifeEventsCsv', () => {
 
         expect(events.length).toBeGreaterThan(0);
         expect(events.some((event) => event.type === 'goal')).toBe(true);
+        expect(events.some((event) => event.name === '就職')).toBe(true);
+        expect(events.some((event) => event.name === '初めての仕事')).toBe(false);
+        expect(events.some((event) => event.name === '専門分野のスキルを身につける')).toBe(false);
+        expect(events.find((event) => event.name === '資産500万円達成')).toMatchObject({
+            type: 'event',
+            age: 25,
+            category: '仕事',
+        });
+        expect(events.find((event) => event.name === '婚活')).toMatchObject({
+            type: 'event',
+            age: 27,
+            category: '家族',
+        });
+        expect(events.find((event) => event.name === '結婚')?.age).toBe(29);
+        expect(events.find((event) => event.name === '子どもの誕生')?.age).toBe(33);
     });
 
     it('イベントと目標を解析し、年齢を数値に変換する', () => {

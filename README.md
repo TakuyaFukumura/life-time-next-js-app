@@ -137,7 +137,7 @@ pnpm start
 ```csv
 type,name,age,category,description,status
 event,大学卒業,22,学業,,
-event,初めての仕事,22,仕事,社会人生活が始まる,
+event,就職,22,仕事,社会人生活が始まる,
 goal,専門分野を学ぶ,30,仕事,学習と実践を続ける,進行中
 ```
 
