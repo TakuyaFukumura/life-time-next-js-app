@@ -22,7 +22,7 @@ const events: LifeEvent[] = [
 
 describe('Timeline', () => {
     it('初期状態ではカードを表示せず、年齢目盛りとマーカーを表示する', () => {
-        render(<Timeline events={events} currentAge={29}/>);
+        render(<Timeline events={events} currentAge={29} gender="未設定"/>);
 
         expect(screen.getByText('0歳')).toBeInTheDocument();
         expect(screen.getByText('100歳')).toBeInTheDocument();
@@ -33,7 +33,7 @@ describe('Timeline', () => {
     });
 
     it('現在の年齢を編集すると現在位置とイベントの経過状態が更新される', () => {
-        render(<Timeline events={events} currentAge={29}/>);
+        render(<Timeline events={events} currentAge={29} gender="未設定"/>);
 
         fireEvent.change(screen.getByRole('spinbutton', {name: '現在の年齢'}), {
             target: {value: '30'},
@@ -44,7 +44,7 @@ describe('Timeline', () => {
     });
 
     it('無効な年齢を確定すると最後の有効な年齢に戻す', () => {
-        render(<Timeline events={events} currentAge={29}/>);
+        render(<Timeline events={events} currentAge={29} gender="未設定"/>);
         const ageInput = screen.getByRole('spinbutton', {name: '現在の年齢'});
 
         fireEvent.change(ageInput, {target: {value: '101'}});
@@ -55,13 +55,13 @@ describe('Timeline', () => {
     });
 
     it('コンポーネントを再表示すると初期年齢に戻る', () => {
-        const {unmount} = render(<Timeline events={events} currentAge={29}/>);
+        const {unmount} = render(<Timeline events={events} currentAge={29} gender="未設定"/>);
         fireEvent.change(screen.getByRole('spinbutton', {name: '現在の年齢'}), {
             target: {value: '35'},
         });
 
         unmount();
-        render(<Timeline events={events} currentAge={29}/>);
+        render(<Timeline events={events} currentAge={29} gender="未設定"/>);
 
         expect(screen.getByText('現在 29歳')).toBeInTheDocument();
     });
@@ -75,6 +75,7 @@ describe('Timeline', () => {
                     events[1],
                 ]}
                 currentAge={29}
+                gender="未設定"
             />
         );
 
@@ -92,7 +93,7 @@ describe('Timeline', () => {
     });
 
     it('マーカーにカーソルを合わせるとカードを浮かび上がらせる', () => {
-        render(<Timeline events={events} currentAge={29}/>);
+        render(<Timeline events={events} currentAge={29} gender="未設定"/>);
 
         fireEvent.mouseEnter(screen.getByRole('button', {name: /資格取得/}));
 
@@ -103,7 +104,7 @@ describe('Timeline', () => {
     });
 
     it('キーボードでマーカーにフォーカスするとカードを表示する', () => {
-        render(<Timeline events={events} currentAge={29}/>);
+        render(<Timeline events={events} currentAge={29} gender="未設定"/>);
 
         const marker = screen.getByRole('button', {name: /誕生/});
         fireEvent.focus(marker);
@@ -114,7 +115,7 @@ describe('Timeline', () => {
     });
 
     it('項目を選択すると説明を表示し、再度選択すると閉じる', () => {
-        render(<Timeline events={events} currentAge={29}/>);
+        render(<Timeline events={events} currentAge={29} gender="未設定"/>);
 
         fireEvent.click(screen.getByRole('button', {name: /誕生/}));
         expect(screen.getByText('サンプルの説明')).toBeInTheDocument();
@@ -127,6 +128,7 @@ describe('Timeline', () => {
         render(
             <Timeline
                 currentAge={29}
+                gender="未設定"
                 events={[
                     events[0],
                     {...events[1], age: 0},
@@ -143,6 +145,7 @@ describe('Timeline', () => {
         render(
             <Timeline
                 currentAge={29}
+                gender="未設定"
                 events={[
                     events[0],
                     {...events[1], age: 1},
@@ -155,8 +158,20 @@ describe('Timeline', () => {
     });
 
     it('項目がない場合は空の状態を表示する', () => {
-        render(<Timeline events={[]} currentAge={29}/>);
+        render(<Timeline events={[]} currentAge={29} gender="未設定"/>);
 
         expect(screen.getByText('表示できる項目がありません。')).toBeInTheDocument();
+    });
+
+    it.each([
+        ['男性', '男性', '81.35'],
+        ['女性', '女性', '87.33'],
+        ['その他', '男女平均', '84.34'],
+        ['未設定', '男女平均', '84.34'],
+    ] as const)('%sに対応する平均寿命を表示する', (gender, group, age) => {
+        render(<Timeline events={events} currentAge={29} gender={gender}/>);
+
+        const legend = screen.getByText(new RegExp(`平均寿命（${group}・日本・2025年）`));
+        expect(legend).toHaveTextContent(`${age}歳`);
     });
 });

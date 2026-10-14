@@ -1,22 +1,23 @@
 import Timeline from './components/Timeline';
 import LifeEventTable from './components/LifeEventTable';
 import {loadLifeEvents} from '../lib/life-events';
-import {loadCurrentAge} from '../lib/current-age';
+import {loadLifeSettings} from '../lib/life-settings';
 import type {LifeEvent} from '../lib/life-events';
+import type {LifeSettings} from '../lib/life-settings';
 
 export default async function Home() {
     let events: LifeEvent[] | null = null;
-    let currentAge: number | null = null;
+    let settings: LifeSettings | null = null;
     try {
-        [events, currentAge] = await Promise.all([
+        [events, settings] = await Promise.all([
             loadLifeEvents(),
-            loadCurrentAge(),
+            loadLifeSettings(),
         ]);
     } catch (error) {
         console.error('サンプルデータまたは設定の読み込みに失敗しました:', error);
     }
 
-    if (events === null || currentAge === null) {
+    if (events === null || settings === null) {
         return (
             <main className="min-h-[calc(100vh-4rem)] px-4 py-10 sm:px-6 lg:px-8">
                 <div className="mx-auto max-w-7xl">
@@ -31,10 +32,18 @@ export default async function Home() {
     return (
         <main className="min-h-[calc(100vh-4rem)] bg-gray-50 px-4 py-10 text-gray-900 dark:bg-gray-900 dark:text-gray-100 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-7xl">
-                <div className="mb-8">
+                <header className="mb-8">
                     <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">人生タイムライン</h1>
-                </div>
-                <Timeline events={events} currentAge={currentAge}/>
+                    <dl className="mt-3 flex gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <dt>性別:</dt>
+                        <dd>{settings.gender}</dd>
+                    </dl>
+                </header>
+                <Timeline
+                    events={events}
+                    currentAge={settings.currentAge}
+                    gender={settings.gender}
+                />
                 <LifeEventTable events={events}/>
             </div>
         </main>

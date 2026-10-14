@@ -3,6 +3,8 @@
 import {useState} from 'react';
 import type {FocusEvent} from 'react';
 import type {LifeEvent} from '../../lib/life-events';
+import {getAverageLifeExpectancy, LIFE_EXPECTANCY_DATA_YEAR} from '../../lib/life-expectancy';
+import type {Gender} from '../../lib/life-settings';
 
 const TIMELINE_WIDTH = 1400;
 const HORIZONTAL_PADDING = 24;
@@ -69,9 +71,11 @@ function layoutEvents(events: readonly LifeEvent[]): PositionedEvent[] {
 export default function Timeline({
     events,
     currentAge,
+    gender,
 }: {
     readonly events: readonly LifeEvent[];
     readonly currentAge: number;
+    readonly gender: Gender;
 }) {
     const [currentAgeInput, setCurrentAgeInput] = useState(String(currentAge));
     const [displayAge, setDisplayAge] = useState(currentAge);
@@ -79,6 +83,13 @@ export default function Timeline({
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
     const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
     const positionedEvents = layoutEvents(events);
+    const averageLifeExpectancy = getAverageLifeExpectancy(gender);
+    const averageLifeExpectancyX = getAgeX(averageLifeExpectancy);
+    const averageLifeExpectancyGroup = gender === '男性'
+        ? '男性'
+        : gender === '女性'
+            ? '女性'
+            : '男女平均';
     const currentAgeX = getAgeX(displayAge);
     const currentAgeLabelLeft = Math.max(
         0,
@@ -140,6 +151,16 @@ export default function Timeline({
                     <span aria-hidden="true">●</span> イベント
                     <span className="ml-4" aria-hidden="true">◆</span> 目標
                 </span>
+                <span className="inline-flex items-center gap-2">
+                    <span
+                        aria-hidden="true"
+                        className="h-4 border-l-2 border-dashed border-amber-600 dark:border-amber-300"
+                    />
+                    <span>
+                        平均寿命（{averageLifeExpectancyGroup}・日本・{LIFE_EXPECTANCY_DATA_YEAR}年）
+                        {' '}{averageLifeExpectancy.toFixed(2)}歳
+                    </span>
+                </span>
             </div>
             <div
                 className="overflow-x-auto rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
@@ -176,6 +197,15 @@ export default function Timeline({
                                 left: currentAgeX,
                                 top: AXIS_Y - 4,
                                 height: 32,
+                            }}
+                        />
+                        <div
+                            aria-hidden="true"
+                            className="absolute z-[1] border-l-2 border-dashed border-amber-600 dark:border-amber-300"
+                            style={{
+                                left: averageLifeExpectancyX,
+                                top: AXIS_Y - 4,
+                                height: height - AXIS_Y + 4,
                             }}
                         />
                         <span
