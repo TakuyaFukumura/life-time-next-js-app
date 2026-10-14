@@ -1,4 +1,4 @@
-import {fireEvent, render, screen} from '@testing-library/react';
+import {fireEvent, render, screen, within} from '@testing-library/react';
 import Timeline from '../../../../src/app/components/Timeline';
 import type {LifeEvent} from '../../../../src/lib/life-events';
 
@@ -41,6 +41,32 @@ describe('Timeline', () => {
 
         expect(screen.getByText('現在 30歳')).toBeInTheDocument();
         expect(screen.getByRole('button', {name: /資格取得.*経過済み/})).toBeInTheDocument();
+    });
+
+    it('平均寿命と健康寿命を終点にした進行度を表示し、100%超も示す', () => {
+        render(<Timeline events={events} currentAge={29} gender="男性"/>);
+
+        const progress = screen.getByRole('group', {name: '人生の進行度'});
+        expect(within(progress).getByText('平均寿命まで')).toBeInTheDocument();
+        expect(within(progress).getByText('35.6%')).toBeInTheDocument();
+        expect(within(progress).getByText('健康寿命まで')).toBeInTheDocument();
+        expect(within(progress).getByText('40.0%')).toBeInTheDocument();
+        expect(screen.getByRole('meter', {name: '平均寿命まで'})).toHaveAttribute('aria-valuenow', '35.6');
+        expect(screen.getByRole('meter', {name: '健康寿命まで'})).toHaveAttribute('aria-valuenow', '40');
+        expect(
+            screen.getByRole('meter', {name: '健康寿命まで'})
+                .compareDocumentPosition(screen.getByRole('meter', {name: '平均寿命まで'}))
+                & Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+
+        fireEvent.change(screen.getByRole('spinbutton', {name: '現在の年齢'}), {
+            target: {value: '100'},
+        });
+
+        expect(within(progress).getByText('122.9%')).toBeInTheDocument();
+        expect(within(progress).getByText('137.8%')).toBeInTheDocument();
+        expect(screen.getByRole('meter', {name: '平均寿命まで'})).toHaveAttribute('aria-valuenow', '122.9');
+        expect(screen.getByRole('meter', {name: '健康寿命まで'})).toHaveAttribute('aria-valuenow', '137.8');
     });
 
     it('無効な年齢を確定すると最後の有効な年齢に戻す', () => {
@@ -163,6 +189,18 @@ describe('Timeline', () => {
         expect(screen.getByText('表示できる項目がありません。')).toBeInTheDocument();
     });
 
+    it('健康寿命の凡例を平均寿命より左側に表示する', () => {
+        render(<Timeline events={events} currentAge={29} gender="男性"/>);
+
+        const healthyLifeLegend = screen.getByText(/健康寿命（男性・日本・2022年）/);
+        const averageLifeLegend = screen.getByText(/平均寿命（男性・日本・2025年）/);
+
+        expect(
+            healthyLifeLegend.compareDocumentPosition(averageLifeLegend)
+                & Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+    });
+
     it.each([
         ['男性', '男性', '81.35'],
         ['女性', '女性', '87.33'],
@@ -172,6 +210,18 @@ describe('Timeline', () => {
         render(<Timeline events={events} currentAge={29} gender={gender}/>);
 
         const legend = screen.getByText(new RegExp(`平均寿命（${group}・日本・2025年）`));
+        expect(legend).toHaveTextContent(`${age}歳`);
+    });
+
+    it.each([
+        ['男性', '男性', '72.57'],
+        ['女性', '女性', '75.45'],
+        ['その他', '男女平均', '74.01'],
+        ['未設定', '男女平均', '74.01'],
+    ] as const)('%sに対応する健康寿命を表示する', (gender, group, age) => {
+        render(<Timeline events={events} currentAge={29} gender={gender}/>);
+
+        const legend = screen.getByText(new RegExp(`健康寿命（${group}・日本・2022年）`));
         expect(legend).toHaveTextContent(`${age}歳`);
     });
 });
