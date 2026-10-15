@@ -110,7 +110,7 @@ describe('Timeline', () => {
         expect(
             screen.getByRole('meter', {name: '健康寿命まで'})
                 .compareDocumentPosition(screen.getByRole('meter', {name: '平均寿命まで'}))
-                & Node.DOCUMENT_POSITION_FOLLOWING,
+            & Node.DOCUMENT_POSITION_FOLLOWING,
         ).toBeTruthy();
 
         fireEvent.change(screen.getByRole('spinbutton', {name: '現在の年齢'}), {
@@ -432,7 +432,7 @@ describe('Timeline', () => {
 
         expect(
             healthyLifeLegend.compareDocumentPosition(averageLifeLegend)
-                & Node.DOCUMENT_POSITION_FOLLOWING,
+            & Node.DOCUMENT_POSITION_FOLLOWING,
         ).toBeTruthy();
     });
 

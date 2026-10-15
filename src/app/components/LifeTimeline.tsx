@@ -3,14 +3,14 @@
 import {useState} from 'react';
 import Timeline from './Timeline';
 import type {LifeEvent} from '../../lib/life-events';
-import {GENDERS} from '../../lib/gender';
 import type {Gender} from '../../lib/gender';
+import {GENDERS} from '../../lib/gender';
 
 export default function LifeTimeline({
-    events,
-    currentAge,
-    initialGender,
-}: {
+                                         events,
+                                         currentAge,
+                                         initialGender,
+                                     }: {
     readonly events: readonly LifeEvent[];
     readonly currentAge: number;
     readonly initialGender: Gender;

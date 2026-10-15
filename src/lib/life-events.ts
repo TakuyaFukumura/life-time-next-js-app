@@ -1,8 +1,8 @@
 import {readFile} from 'node:fs/promises';
 import path from 'node:path';
 import {parse} from 'csv-parse/sync';
-import {LIFE_EVENT_CATEGORIES} from './life-event-categories';
 import type {LifeEventCategory} from './life-event-categories';
+import {LIFE_EVENT_CATEGORIES} from './life-event-categories';
 
 export const LIFE_EVENT_CSV_HEADERS = [
     'type',
@@ -26,8 +26,8 @@ type LifeEventBase = {
 };
 
 export type LifeEvent =
-    | (LifeEventBase & {type: 'event'; status?: never})
-    | (LifeEventBase & {type: 'goal'; status: GoalStatus});
+    | (LifeEventBase & { type: 'event'; status?: never })
+    | (LifeEventBase & { type: 'goal'; status: GoalStatus });
 
 const goalStatuses: readonly GoalStatus[] = ['未着手', '進行中', '達成', '中止'];
 

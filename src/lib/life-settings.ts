@@ -1,8 +1,8 @@
 import {readFile} from 'node:fs/promises';
 import path from 'node:path';
 import {parse} from 'csv-parse/sync';
-import {GENDERS} from './gender';
 import type {Gender} from './gender';
+import {GENDERS} from './gender';
 
 export {GENDERS} from './gender';
 export type {Gender} from './gender';

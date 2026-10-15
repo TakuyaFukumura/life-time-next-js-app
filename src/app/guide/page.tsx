@@ -9,7 +9,8 @@ const sectionClassName = 'rounded-xl border border-gray-200 bg-white p-6 dark:bo
 
 export default function GuidePage() {
     return (
-        <main className="min-h-[calc(100vh-4rem)] bg-gray-50 px-4 py-10 text-gray-900 dark:bg-gray-900 dark:text-gray-100 sm:px-6 lg:px-8">
+        <main
+            className="min-h-[calc(100vh-4rem)] bg-gray-50 px-4 py-10 text-gray-900 dark:bg-gray-900 dark:text-gray-100 sm:px-6 lg:px-8">
             <article className="mx-auto max-w-4xl">
                 <header className="mb-8">
                     <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">解説</h1>

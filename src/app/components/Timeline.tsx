@@ -1,7 +1,7 @@
 'use client';
 
-import {useRef, useState} from 'react';
 import type {FocusEvent} from 'react';
+import {useRef, useState} from 'react';
 import type {LifeEvent} from '../../lib/life-events';
 import {
     getAverageLifeExpectancy,
@@ -133,10 +133,10 @@ function getTooltipPosition(
 }
 
 export default function Timeline({
-    events,
-    currentAge,
-    gender,
-}: {
+                                     events,
+                                     currentAge,
+                                     gender,
+                                 }: {
     readonly events: readonly LifeEvent[];
     readonly currentAge: number;
     readonly gender: Gender;
@@ -227,7 +227,8 @@ export default function Timeline({
 
     return (
         <section aria-label="人生タイムライン">
-            <div className="mb-4 flex flex-wrap items-end justify-between gap-4 text-sm text-gray-700 dark:text-gray-300">
+            <div
+                className="mb-4 flex flex-wrap items-end justify-between gap-4 text-sm text-gray-700 dark:text-gray-300">
                 <div>
                     <label htmlFor="current-age-input" className="mb-1 block font-medium">
                         現在の年齢
@@ -500,20 +501,20 @@ export default function Timeline({
                     </div>
                     <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-gray-700 dark:text-gray-300">
                         <div>
-                            <dt className="inline font-medium">年齢: </dt>
+                            <dt className="inline font-medium">年齢:</dt>
                             <dd className="inline">{selectedEvent.age}歳</dd>
                         </div>
                         <div>
-                            <dt className="inline font-medium">種別: </dt>
+                            <dt className="inline font-medium">種別:</dt>
                             <dd className="inline">{selectedEvent.type === 'event' ? 'イベント' : '目標'}</dd>
                         </div>
                         <div>
-                            <dt className="inline font-medium">カテゴリ: </dt>
+                            <dt className="inline font-medium">カテゴリ:</dt>
                             <dd className="inline">{selectedEvent.category}</dd>
                         </div>
                         {selectedEvent.type === 'goal' && (
                             <div>
-                                <dt className="inline font-medium">状態: </dt>
+                                <dt className="inline font-medium">状態:</dt>
                                 <dd className="inline">{selectedEvent.status}</dd>
                             </div>
                         )}

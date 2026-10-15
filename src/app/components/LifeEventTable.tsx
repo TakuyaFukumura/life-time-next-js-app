@@ -34,13 +34,13 @@ function compareEvents(first: LifeEvent, second: LifeEvent, key: SortKey): numbe
 }
 
 function SortableHeader({
-    label,
-    column,
-    sortKey,
-    sortDirection,
-    align = 'left',
-    onSort,
-}: {
+                            label,
+                            column,
+                            sortKey,
+                            sortDirection,
+                            align = 'left',
+                            onSort,
+                        }: {
     readonly label: string;
     readonly column: SortKey;
     readonly sortKey: SortKey;
@@ -74,7 +74,7 @@ function SortableHeader({
     );
 }
 
-export default function LifeEventTable({events}: {readonly events: readonly LifeEvent[]}) {
+export default function LifeEventTable({events}: { readonly events: readonly LifeEvent[] }) {
     const [requestedPage, setRequestedPage] = useState(1);
     const [sortKey, setSortKey] = useState<SortKey>('age');
     const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -202,7 +202,7 @@ export default function LifeEventTable({events}: {readonly events: readonly Life
                                 onChange={(event) => {
                                     const value = event.currentTarget.value;
                                     setStatusFilter(value === '未着手' || value === '進行中' ||
-                                        value === '達成' || value === '中止' ? value : 'all');
+                                    value === '達成' || value === '中止' ? value : 'all');
                                     setRequestedPage(1);
                                 }}
                                 className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:focus-visible:outline-gray-200"
@@ -231,82 +231,83 @@ export default function LifeEventTable({events}: {readonly events: readonly Life
                             条件に一致するデータがありません。
                         </p>
                     ) : (
-                        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                        <div
+                            className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
                             <table className="w-full min-w-[760px] border-collapse text-left text-sm">
                                 <caption className="sr-only">
                                     人生のイベントと目標一覧
                                 </caption>
                                 <thead className="bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200">
-                                    <tr>
-                                        <SortableHeader
-                                            label="種別"
-                                            column="type"
-                                            sortKey={sortKey}
-                                            sortDirection={sortDirection}
-                                            onSort={handleSort}
-                                        />
-                                        <SortableHeader
-                                            label="名称"
-                                            column="name"
-                                            sortKey={sortKey}
-                                            sortDirection={sortDirection}
-                                            onSort={handleSort}
-                                        />
-                                        <SortableHeader
-                                            label="年齢"
-                                            column="age"
-                                            sortKey={sortKey}
-                                            sortDirection={sortDirection}
-                                            align="right"
-                                            onSort={handleSort}
-                                        />
-                                        <SortableHeader
-                                            label="カテゴリ"
-                                            column="category"
-                                            sortKey={sortKey}
-                                            sortDirection={sortDirection}
-                                            onSort={handleSort}
-                                        />
-                                        <SortableHeader
-                                            label="説明"
-                                            column="description"
-                                            sortKey={sortKey}
-                                            sortDirection={sortDirection}
-                                            onSort={handleSort}
-                                        />
-                                        <SortableHeader
-                                            label="状態"
-                                            column="status"
-                                            sortKey={sortKey}
-                                            sortDirection={sortDirection}
-                                            onSort={handleSort}
-                                        />
-                                    </tr>
+                                <tr>
+                                    <SortableHeader
+                                        label="種別"
+                                        column="type"
+                                        sortKey={sortKey}
+                                        sortDirection={sortDirection}
+                                        onSort={handleSort}
+                                    />
+                                    <SortableHeader
+                                        label="名称"
+                                        column="name"
+                                        sortKey={sortKey}
+                                        sortDirection={sortDirection}
+                                        onSort={handleSort}
+                                    />
+                                    <SortableHeader
+                                        label="年齢"
+                                        column="age"
+                                        sortKey={sortKey}
+                                        sortDirection={sortDirection}
+                                        align="right"
+                                        onSort={handleSort}
+                                    />
+                                    <SortableHeader
+                                        label="カテゴリ"
+                                        column="category"
+                                        sortKey={sortKey}
+                                        sortDirection={sortDirection}
+                                        onSort={handleSort}
+                                    />
+                                    <SortableHeader
+                                        label="説明"
+                                        column="description"
+                                        sortKey={sortKey}
+                                        sortDirection={sortDirection}
+                                        onSort={handleSort}
+                                    />
+                                    <SortableHeader
+                                        label="状態"
+                                        column="status"
+                                        sortKey={sortKey}
+                                        sortDirection={sortDirection}
+                                        onSort={handleSort}
+                                    />
+                                </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                                    {pageEvents.map((event, index) => (
-                                        <tr
-                                            key={`${event.age}-${event.type}-${(currentPage - 1) * PAGE_SIZE + index}`}
-                                            className="text-gray-800 dark:text-gray-200"
-                                        >
-                                            <td className="whitespace-nowrap px-4 py-3">
-                                                {event.type === 'event' ? 'イベント' : '目標'}
-                                            </td>
-                                            <td className="max-w-56 break-words px-4 py-3 font-medium">
-                                                {event.name}
-                                            </td>
-                                            <td className="whitespace-nowrap px-4 py-3 text-right">
-                                                {event.age}歳
-                                            </td>
-                                            <td className="whitespace-nowrap px-4 py-3">{event.category}</td>
-                                            <td className="max-w-80 whitespace-pre-wrap break-words px-4 py-3">
-                                                {event.description || '—'}
-                                            </td>
-                                            <td className="whitespace-nowrap px-4 py-3">
-                                                {event.type === 'goal' ? event.status : '—'}
-                                            </td>
-                                        </tr>
-                                    ))}
+                                {pageEvents.map((event, index) => (
+                                    <tr
+                                        key={`${event.age}-${event.type}-${(currentPage - 1) * PAGE_SIZE + index}`}
+                                        className="text-gray-800 dark:text-gray-200"
+                                    >
+                                        <td className="whitespace-nowrap px-4 py-3">
+                                            {event.type === 'event' ? 'イベント' : '目標'}
+                                        </td>
+                                        <td className="max-w-56 break-words px-4 py-3 font-medium">
+                                            {event.name}
+                                        </td>
+                                        <td className="whitespace-nowrap px-4 py-3 text-right">
+                                            {event.age}歳
+                                        </td>
+                                        <td className="whitespace-nowrap px-4 py-3">{event.category}</td>
+                                        <td className="max-w-80 whitespace-pre-wrap break-words px-4 py-3">
+                                            {event.description || '—'}
+                                        </td>
+                                        <td className="whitespace-nowrap px-4 py-3">
+                                            {event.type === 'goal' ? event.status : '—'}
+                                        </td>
+                                    </tr>
+                                ))}
                                 </tbody>
                             </table>
                         </div>
