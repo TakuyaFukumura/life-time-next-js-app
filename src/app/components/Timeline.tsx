@@ -217,7 +217,7 @@ export default function Timeline({
         <section aria-label="人生タイムライン">
             <fieldset
                 aria-label="年齢と性別の設定"
-                className="mb-4 rounded-xl border border-gray-200 bg-white px-4 pb-4 pt-1 text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                className="mb-4 rounded-xl border border-gray-200 bg-white px-4 pb-4 pt-3 text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
             >
                 <div className="flex flex-wrap items-end gap-x-6 gap-y-4 text-sm">
                     <div>
