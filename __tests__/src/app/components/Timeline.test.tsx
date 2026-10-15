@@ -111,6 +111,9 @@ describe('Timeline', () => {
         render(<Timeline events={events} currentAge={29} initialGender="男性"/>);
 
         const progress = screen.getByRole('group', {name: '人生の進行度'});
+        expect(screen.getByText(
+            /各割合は平均寿命・健康寿命の統計上の目安を100%として/,
+        )).toBeInTheDocument();
         expect(within(progress).getByText('平均寿命まで')).toBeInTheDocument();
         expect(within(progress).getByText('35.6%')).toBeInTheDocument();
         expect(within(progress).getByText('健康寿命まで')).toBeInTheDocument();
@@ -444,6 +447,34 @@ describe('Timeline', () => {
             healthyLifeLegend.compareDocumentPosition(averageLifeLegend)
             & Node.DOCUMENT_POSITION_FOLLOWING,
         ).toBeTruthy();
+    });
+
+    it('寿命目安が個人予測ではないことを説明し、それぞれの出典へリンクする', () => {
+        render(<Timeline events={events} currentAge={29} initialGender="男性"/>);
+
+        expect(screen.getAllByText(
+            /個人の寿命や健康状態を予測するものではありません/,
+        )).toHaveLength(2);
+
+        const healthyLifeSource = screen.getByRole('link', {
+            name: '健康寿命の出典: 厚生労働省「健康寿命の令和4年値について」',
+        });
+        expect(healthyLifeSource).toHaveAttribute(
+            'href',
+            'https://www.mhlw.go.jp/content/10904750/001363069.pdf',
+        );
+        expect(healthyLifeSource).toHaveAttribute('target', '_blank');
+        expect(healthyLifeSource).toHaveAttribute('rel', 'noreferrer');
+
+        const averageLifeSource = screen.getByRole('link', {
+            name: '平均寿命の出典: 厚生労働省「令和7（2025）年簡易生命表」',
+        });
+        expect(averageLifeSource).toHaveAttribute(
+            'href',
+            'https://www.mhlw.go.jp/toukei/saikin/hw/life/life25/dl/life25-15.pdf',
+        );
+        expect(averageLifeSource).toHaveAttribute('target', '_blank');
+        expect(averageLifeSource).toHaveAttribute('rel', 'noreferrer');
     });
 
     it.each([

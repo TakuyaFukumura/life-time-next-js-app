@@ -305,6 +305,17 @@ export default function Timeline({
                     <span>
                         健康寿命（{expectancyGroup}・日本・{HEALTHY_LIFE_EXPECTANCY_DATA_YEAR}年）
                         {' '}{healthyLifeExpectancy.toFixed(2)}歳
+                        {' ('}
+                        <a
+                            href="https://www.mhlw.go.jp/content/10904750/001363069.pdf"
+                            target="_blank"
+                            rel="noreferrer"
+                            aria-label="健康寿命の出典: 厚生労働省「健康寿命の令和4年値について」"
+                            className="underline underline-offset-2 hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700 dark:hover:text-white dark:focus-visible:outline-gray-200"
+                        >
+                            出典
+                        </a>
+                        {')'}
                     </span>
                 </span>
                 <span className="inline-flex items-center gap-2">
@@ -315,9 +326,23 @@ export default function Timeline({
                     <span>
                         平均寿命（{expectancyGroup}・日本・{LIFE_EXPECTANCY_DATA_YEAR}年）
                         {' '}{averageLifeExpectancy.toFixed(2)}歳
+                        {' ('}
+                        <a
+                            href="https://www.mhlw.go.jp/toukei/saikin/hw/life/life25/dl/life25-15.pdf"
+                            target="_blank"
+                            rel="noreferrer"
+                            aria-label="平均寿命の出典: 厚生労働省「令和7（2025）年簡易生命表」"
+                            className="underline underline-offset-2 hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700 dark:hover:text-white dark:focus-visible:outline-gray-200"
+                        >
+                            出典
+                        </a>
+                        {')'}
                     </span>
                 </span>
             </div>
+            <p className="mb-3 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                平均寿命・健康寿命は日本の統計上の目安であり、個人の寿命や健康状態を予測するものではありません。
+            </p>
             <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
                 年齢軸は0歳から100歳までです。左右にスクロールして閲覧できます。
             </p>
@@ -579,8 +604,8 @@ export default function Timeline({
                 <h2 id="life-progress-heading" className="text-xl font-semibold">
                     人生の進行度
                 </h2>
-                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                    寿命の目安を100%として表示しています。現在年齢は最大100歳まで設定できます。
+                <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                    各割合は平均寿命・健康寿命の統計上の目安を100%として示したもので、個人の寿命や健康状態を予測するものではありません。現在年齢は最大100歳まで設定できます。
                 </p>
                 <div
                     role="group"
