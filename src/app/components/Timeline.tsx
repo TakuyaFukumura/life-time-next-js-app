@@ -148,7 +148,6 @@ export default function Timeline({
     const [selectedEventIndex, setSelectedEventIndex] = useState<number | null>(null);
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
     const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
-    const scrollContainerRef = useRef<HTMLDivElement>(null);
     const markerButtonRefs = useRef(new Map<number, HTMLButtonElement>());
     const positionedEvents = layoutEvents(events);
     const selectedEvent = selectedEventIndex === null
@@ -207,26 +206,6 @@ export default function Timeline({
         }
     };
 
-    const scrollToAge = (age: number) => {
-        const container = scrollContainerRef.current;
-        if (!container) {
-            return;
-        }
-
-        const maxScrollLeft = Math.max(0, container.scrollWidth - container.clientWidth);
-        const left = Math.max(0, Math.min(
-            getAgeX(age) - container.clientWidth / 2,
-            maxScrollLeft,
-        ));
-        const prefersReducedMotion = typeof window.matchMedia === 'function' &&
-            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-        container.scrollTo({
-            left,
-            behavior: prefersReducedMotion ? 'auto' : 'smooth',
-        });
-    };
-
     const closeSelectedEvent = (restoreFocus: boolean) => {
         if (restoreFocus && selectedEventIndex !== null) {
             markerButtonRefs.current.get(selectedEventIndex)?.focus();
@@ -236,8 +215,10 @@ export default function Timeline({
 
     return (
         <section aria-label="人生タイムライン">
-            <fieldset className="mb-4 rounded-xl border border-gray-200 bg-white px-4 pb-4 pt-1 text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
-                <legend className="px-2 text-sm font-semibold">表示条件</legend>
+            <fieldset
+                aria-label="年齢と性別の設定"
+                className="mb-4 rounded-xl border border-gray-200 bg-white px-4 pb-4 pt-1 text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+            >
                 <div className="flex flex-wrap items-end gap-x-6 gap-y-4 text-sm">
                     <div>
                         <label htmlFor="current-age-input" className="mb-1 block font-medium">
@@ -274,28 +255,11 @@ export default function Timeline({
                         </select>
                     </div>
                 </div>
-                <p className="mt-3 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
-                    年齢と性別の変更はこの画面だけに反映され、保存されません。ページを再表示すると設定CSVの値に戻ります。
-                </p>
             </fieldset>
             <div className="mb-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-gray-700 dark:text-gray-300">
                 <span role="img" aria-label="イベントは丸、目標はひし形">
                     <span aria-hidden="true">●</span> イベント
                     <span className="ml-4" aria-hidden="true">◆</span> 目標
-                </span>
-                <span className="inline-flex items-center gap-2">
-                    <span
-                        aria-hidden="true"
-                        className="size-3 rounded-full border-2 border-gray-700 bg-gray-700 dark:border-gray-200 dark:bg-gray-200"
-                    />
-                    経過済み（現在年齢まで）
-                </span>
-                <span className="inline-flex items-center gap-2">
-                    <span
-                        aria-hidden="true"
-                        className="size-3 rounded-full border-2 border-gray-700 bg-transparent dark:border-gray-200"
-                    />
-                    これから
                 </span>
                 <span className="inline-flex items-center gap-2">
                     <span
@@ -340,42 +304,7 @@ export default function Timeline({
                     </span>
                 </span>
             </div>
-            <p className="mb-3 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-                平均寿命・健康寿命は日本の統計上の目安であり、個人の寿命や健康状態を予測するものではありません。
-            </p>
-            <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
-                年齢軸は0歳から100歳までです。左右にスクロールして閲覧できます。
-            </p>
-            {events.length > 0 && (
-                <nav
-                    aria-label="タイムラインの年齢位置へ移動"
-                    className="mb-3 flex flex-wrap gap-2"
-                >
-                    <button
-                        type="button"
-                        onClick={() => scrollToAge(0)}
-                        className="min-h-11 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700 dark:focus-visible:outline-gray-200"
-                    >
-                        0歳へ
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => scrollToAge(displayAge)}
-                        className="min-h-11 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700 dark:focus-visible:outline-gray-200"
-                    >
-                        現在年齢へ
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => scrollToAge(100)}
-                        className="min-h-11 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700 dark:focus-visible:outline-gray-200"
-                    >
-                        100歳へ
-                    </button>
-                </nav>
-            )}
             <div
-                ref={scrollContainerRef}
                 className="overflow-x-auto rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
                 role="region"
                 aria-label="年齢0歳から100歳までのタイムライン。横スクロールできます"
@@ -604,9 +533,6 @@ export default function Timeline({
                 <h2 id="life-progress-heading" className="text-xl font-semibold">
                     人生の進行度
                 </h2>
-                <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-                    各割合は平均寿命・健康寿命の統計上の目安を100%として示したもので、個人の寿命や健康状態を予測するものではありません。現在年齢は最大100歳まで設定できます。
-                </p>
                 <div
                     role="group"
                     aria-label="人生の進行度"

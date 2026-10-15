@@ -24,11 +24,14 @@ describe('Timeline', () => {
     it('タイムラインのスクロールとマーカー表示の凡例を説明する', () => {
         render(<Timeline events={events} currentAge={29} initialGender="未設定"/>);
 
-        expect(screen.getByText('経過済み（現在年齢まで）')).toBeInTheDocument();
-        expect(screen.getByText('これから')).toBeInTheDocument();
-        expect(screen.getByText(
+        expect(screen.queryByText('経過済み（現在年齢まで）')).not.toBeInTheDocument();
+        expect(screen.queryByText('これから')).not.toBeInTheDocument();
+        expect(screen.queryByText(
             '年齢軸は0歳から100歳までです。左右にスクロールして閲覧できます。'
-        )).toBeInTheDocument();
+        )).not.toBeInTheDocument();
+        expect(screen.queryByText(
+            '平均寿命・健康寿命は日本の統計上の目安であり、個人の寿命や健康状態を予測するものではありません。'
+        )).not.toBeInTheDocument();
     });
 
     it('初期状態ではカードを表示せず、年齢目盛りとマーカーを表示する', () => {
@@ -42,58 +45,13 @@ describe('Timeline', () => {
         expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
     });
 
-    it('年齢位置の移動ボタンで横スクロールし、ページ位置は変更しない', () => {
+    it('年齢位置へ移動するボタンを表示しない', () => {
         render(<Timeline events={events} currentAge={29} initialGender="未設定"/>);
-        const timeline = screen.getByRole('region', {
-            name: '年齢0歳から100歳までのタイムライン。横スクロールできます',
-        });
-        const scrollTo = jest.fn();
-        Object.defineProperty(timeline, 'clientWidth', {configurable: true, value: 300});
-        Object.defineProperty(timeline, 'scrollWidth', {configurable: true, value: 1432});
-        Object.defineProperty(timeline, 'scrollTo', {configurable: true, value: scrollTo});
 
-        fireEvent.click(screen.getByRole('button', {name: '0歳へ'}));
-        expect(scrollTo).toHaveBeenLastCalledWith({left: 0, behavior: 'smooth'});
-
-        fireEvent.click(screen.getByRole('button', {name: '現在年齢へ'}));
-        expect(scrollTo.mock.calls.at(-1)?.[0].left).toBeCloseTo(266.08);
-        expect(scrollTo.mock.calls.at(-1)?.[0].behavior).toBe('smooth');
-
-        fireEvent.click(screen.getByRole('button', {name: '100歳へ'}));
-        expect(scrollTo).toHaveBeenLastCalledWith({left: 1132, behavior: 'smooth'});
-    });
-
-    it('現在年齢を変更すると移動ボタンの移動先も更新し、動きを減らす設定を尊重する', () => {
-        const originalDescriptor = Object.getOwnPropertyDescriptor(window, 'matchMedia');
-        Object.defineProperty(window, 'matchMedia', {
-            configurable: true,
-            value: jest.fn().mockReturnValue({matches: true}),
-        });
-
-        try {
-            render(<Timeline events={events} currentAge={29} initialGender="未設定"/>);
-            const timeline = screen.getByRole('region', {
-                name: '年齢0歳から100歳までのタイムライン。横スクロールできます',
-            });
-            const scrollTo = jest.fn();
-            Object.defineProperty(timeline, 'clientWidth', {configurable: true, value: 300});
-            Object.defineProperty(timeline, 'scrollWidth', {configurable: true, value: 1432});
-            Object.defineProperty(timeline, 'scrollTo', {configurable: true, value: scrollTo});
-
-            fireEvent.change(screen.getByRole('spinbutton', {name: '現在の年齢'}), {
-                target: {value: '40'},
-            });
-            fireEvent.click(screen.getByRole('button', {name: '現在年齢へ'}));
-
-            expect(scrollTo.mock.calls[0][0].left).toBeCloseTo(414.8);
-            expect(scrollTo.mock.calls[0][0].behavior).toBe('auto');
-        } finally {
-            if (originalDescriptor) {
-                Object.defineProperty(window, 'matchMedia', originalDescriptor);
-            } else {
-                Reflect.deleteProperty(window, 'matchMedia');
-            }
-        }
+        expect(screen.queryByRole('navigation', {name: 'タイムラインの年齢位置へ移動'}))
+            .not.toBeInTheDocument();
+        expect(screen.queryByRole('button', {name: /^(0歳へ|現在年齢へ|100歳へ)$/}))
+            .not.toBeInTheDocument();
     });
 
     it('現在の年齢を編集すると現在位置とイベントの経過状態が更新される', () => {
@@ -111,9 +69,9 @@ describe('Timeline', () => {
         render(<Timeline events={events} currentAge={29} initialGender="男性"/>);
 
         const progress = screen.getByRole('group', {name: '人生の進行度'});
-        expect(screen.getByText(
+        expect(screen.queryByText(
             /各割合は平均寿命・健康寿命の統計上の目安を100%として/,
-        )).toBeInTheDocument();
+        )).not.toBeInTheDocument();
         expect(within(progress).getByText('平均寿命まで')).toBeInTheDocument();
         expect(within(progress).getByText('35.6%')).toBeInTheDocument();
         expect(within(progress).getByText('健康寿命まで')).toBeInTheDocument();
@@ -383,21 +341,6 @@ describe('Timeline', () => {
         expect(goalMarker).toHaveAttribute('aria-pressed', 'true');
     });
 
-    it('タイムラインを移動しても選択中の詳細を維持する', () => {
-        render(<Timeline events={events} currentAge={29} initialGender="未設定"/>);
-        const timeline = screen.getByRole('region', {
-            name: '年齢0歳から100歳までのタイムライン。横スクロールできます',
-        });
-        Object.defineProperty(timeline, 'clientWidth', {configurable: true, value: 300});
-        Object.defineProperty(timeline, 'scrollWidth', {configurable: true, value: 1432});
-        Object.defineProperty(timeline, 'scrollTo', {configurable: true, value: jest.fn()});
-
-        fireEvent.click(screen.getByRole('button', {name: /誕生/}));
-        fireEvent.click(screen.getByRole('button', {name: '100歳へ'}));
-
-        expect(screen.getByRole('heading', {name: '誕生'})).toBeInTheDocument();
-    });
-
     it('同じ年齢の項目を同じ横位置で縦にずらして表示する', () => {
         render(
             <Timeline
@@ -452,9 +395,9 @@ describe('Timeline', () => {
     it('寿命目安が個人予測ではないことを説明し、それぞれの出典へリンクする', () => {
         render(<Timeline events={events} currentAge={29} initialGender="男性"/>);
 
-        expect(screen.getAllByText(
+        expect(screen.queryAllByText(
             /個人の寿命や健康状態を予測するものではありません/,
-        )).toHaveLength(2);
+        )).toHaveLength(0);
 
         const healthyLifeSource = screen.getByRole('link', {
             name: '健康寿命の出典: 厚生労働省「健康寿命の令和4年値について」',
