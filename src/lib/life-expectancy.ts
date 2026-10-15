@@ -1,4 +1,4 @@
-import type {Gender} from './life-settings';
+import type {Gender} from './gender';
 
 export const LIFE_EXPECTANCY_DATA_YEAR = 2025;
 export const HEALTHY_LIFE_EXPECTANCY_DATA_YEAR = 2022;

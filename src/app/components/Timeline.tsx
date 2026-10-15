@@ -10,7 +10,7 @@ import {
     HEALTHY_LIFE_EXPECTANCY_DATA_YEAR,
     LIFE_EXPECTANCY_DATA_YEAR,
 } from '../../lib/life-expectancy';
-import type {Gender} from '../../lib/life-settings';
+import type {Gender} from '../../lib/gender';
 
 const TIMELINE_WIDTH = 1400;
 const HORIZONTAL_PADDING = 24;
