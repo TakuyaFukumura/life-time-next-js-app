@@ -7,14 +7,6 @@ import type {LifeEvent, LifeEventCategory} from '../../lib/life-events';
 const PAGE_SIZE = 10;
 type SortKey = 'type' | 'name' | 'age' | 'category' | 'description' | 'status';
 type SortDirection = 'asc' | 'desc';
-const SORT_OPTIONS: readonly {readonly key: SortKey; readonly label: string}[] = [
-    {key: 'type', label: '種別'},
-    {key: 'name', label: '名称'},
-    {key: 'age', label: '年齢'},
-    {key: 'category', label: 'カテゴリ'},
-    {key: 'description', label: '説明'},
-    {key: 'status', label: '状態'},
-];
 
 const japaneseCollator = new Intl.Collator('ja', {numeric: true, sensitivity: 'base'});
 
@@ -264,167 +256,85 @@ export default function LifeEventTable({events}: { readonly events: readonly Lif
                             条件に一致するデータがありません。
                         </p>
                     ) : (
-                        <>
-                            <div className="mb-3 flex items-end gap-3 lg:hidden">
-                                <label className="flex flex-1 flex-col gap-1 text-sm text-gray-700 dark:text-gray-300">
-                                    並べ替え項目
-                                    <select
-                                        aria-label="モバイルの並べ替え項目"
-                                        value={sortKey}
-                                        onChange={(event) => {
-                                            const option = SORT_OPTIONS.find(
-                                                ({key}) => key === event.currentTarget.value,
-                                            );
-                                            if (option && option.key !== sortKey) {
-                                                handleSort(option.key);
-                                            }
-                                        }}
-                                        className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:focus-visible:outline-gray-200"
-                                    >
-                                        {SORT_OPTIONS.map(({key, label}) => (
-                                            <option key={key} value={key}>{label}</option>
-                                        ))}
-                                    </select>
-                                </label>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setSortDirection((direction) => direction === 'asc' ? 'desc' : 'asc');
-                                        setRequestedPage(1);
-                                    }}
-                                    aria-label={sortDirection === 'asc' ? '降順にする' : '昇順にする'}
-                                    className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-700 dark:focus-visible:outline-gray-200"
-                                >
-                                    {sortDirection === 'asc' ? '昇順 ↑' : '降順 ↓'}
-                                </button>
-                                <span aria-live="polite" className="sr-only">
-                                    {`${SORT_OPTIONS.find(({key}) => key === sortKey)?.label}の${
-                                        sortDirection === 'asc' ? '昇順' : '降順'
-                                    }で表示中`}
-                                </span>
-                            </div>
-                            <ul
-                                aria-label="モバイルのデータ一覧"
-                                className="space-y-3 lg:hidden"
-                            >
+                        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                            <table className="w-full min-w-[760px] border-collapse text-left text-sm">
+                                <caption className="sr-only">
+                                    人生のイベントと目標一覧
+                                </caption>
+                                <thead className="bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+                                <tr>
+                                    <SortableHeader
+                                        label="種別"
+                                        column="type"
+                                        sortKey={sortKey}
+                                        sortDirection={sortDirection}
+                                        onSort={handleSort}
+                                    />
+                                    <SortableHeader
+                                        label="名称"
+                                        column="name"
+                                        sortKey={sortKey}
+                                        sortDirection={sortDirection}
+                                        onSort={handleSort}
+                                    />
+                                    <SortableHeader
+                                        label="年齢"
+                                        column="age"
+                                        sortKey={sortKey}
+                                        sortDirection={sortDirection}
+                                        align="right"
+                                        onSort={handleSort}
+                                    />
+                                    <SortableHeader
+                                        label="カテゴリ"
+                                        column="category"
+                                        sortKey={sortKey}
+                                        sortDirection={sortDirection}
+                                        onSort={handleSort}
+                                    />
+                                    <SortableHeader
+                                        label="説明"
+                                        column="description"
+                                        sortKey={sortKey}
+                                        sortDirection={sortDirection}
+                                        onSort={handleSort}
+                                    />
+                                    <SortableHeader
+                                        label="状態"
+                                        column="status"
+                                        sortKey={sortKey}
+                                        sortDirection={sortDirection}
+                                        onSort={handleSort}
+                                    />
+                                </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                                 {pageEvents.map((event, index) => (
-                                    <li key={`${event.age}-${event.type}-${(currentPage - 1) * PAGE_SIZE + index}`}>
-                                        <article className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                                            <div className="mb-3 flex items-start justify-between gap-3">
-                                                <div>
-                                                    <p className="text-xs text-gray-600 dark:text-gray-400">
-                                                        {event.type === 'event' ? 'イベント' : '目標'}
-                                                    </p>
-                                                    <h3 className="break-words font-semibold text-gray-900 dark:text-gray-100">
-                                                        {event.name}
-                                                    </h3>
-                                                </div>
-                                                <p className="shrink-0 text-sm font-semibold text-gray-800 dark:text-gray-200">
-                                                    {event.age}歳
-                                                </p>
-                                            </div>
-                                            <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-                                                <div>
-                                                    <dt className="text-xs text-gray-600 dark:text-gray-400">カテゴリ</dt>
-                                                    <dd className="text-gray-800 dark:text-gray-200">{event.category}</dd>
-                                                </div>
-                                                <div>
-                                                    <dt className="text-xs text-gray-600 dark:text-gray-400">状態</dt>
-                                                    <dd className="text-gray-800 dark:text-gray-200">
-                                                        {event.type === 'goal' ? event.status : '—'}
-                                                    </dd>
-                                                </div>
-                                                <div className="col-span-2">
-                                                    <dt className="text-xs text-gray-600 dark:text-gray-400">説明</dt>
-                                                    <dd className="whitespace-pre-wrap break-words text-gray-800 dark:text-gray-200">
-                                                        {event.description || '—'}
-                                                    </dd>
-                                                </div>
-                                            </dl>
-                                        </article>
-                                    </li>
-                                ))}
-                            </ul>
-                            <div className="hidden overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 lg:block">
-                                <table className="w-full min-w-[760px] border-collapse text-left text-sm">
-                                    <caption className="sr-only">
-                                        人生のイベントと目標一覧
-                                    </caption>
-                                    <thead className="bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200">
-                                    <tr>
-                                        <SortableHeader
-                                            label="種別"
-                                            column="type"
-                                            sortKey={sortKey}
-                                            sortDirection={sortDirection}
-                                            onSort={handleSort}
-                                        />
-                                        <SortableHeader
-                                            label="名称"
-                                            column="name"
-                                            sortKey={sortKey}
-                                            sortDirection={sortDirection}
-                                            onSort={handleSort}
-                                        />
-                                        <SortableHeader
-                                            label="年齢"
-                                            column="age"
-                                            sortKey={sortKey}
-                                            sortDirection={sortDirection}
-                                            align="right"
-                                            onSort={handleSort}
-                                        />
-                                        <SortableHeader
-                                            label="カテゴリ"
-                                            column="category"
-                                            sortKey={sortKey}
-                                            sortDirection={sortDirection}
-                                            onSort={handleSort}
-                                        />
-                                        <SortableHeader
-                                            label="説明"
-                                            column="description"
-                                            sortKey={sortKey}
-                                            sortDirection={sortDirection}
-                                            onSort={handleSort}
-                                        />
-                                        <SortableHeader
-                                            label="状態"
-                                            column="status"
-                                            sortKey={sortKey}
-                                            sortDirection={sortDirection}
-                                            onSort={handleSort}
-                                        />
+                                    <tr
+                                        key={`${event.age}-${event.type}-${(currentPage - 1) * PAGE_SIZE + index}`}
+                                        className="text-gray-800 dark:text-gray-200"
+                                    >
+                                        <td className="whitespace-nowrap px-4 py-3">
+                                            {event.type === 'event' ? 'イベント' : '目標'}
+                                        </td>
+                                        <td className="max-w-56 break-words px-4 py-3 font-medium">
+                                            {event.name}
+                                        </td>
+                                        <td className="whitespace-nowrap px-4 py-3 text-right">
+                                            {event.age}歳
+                                        </td>
+                                        <td className="whitespace-nowrap px-4 py-3">{event.category}</td>
+                                        <td className="max-w-80 whitespace-pre-wrap break-words px-4 py-3">
+                                            {event.description || '—'}
+                                        </td>
+                                        <td className="whitespace-nowrap px-4 py-3">
+                                            {event.type === 'goal' ? event.status : '—'}
+                                        </td>
                                     </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                                    {pageEvents.map((event, index) => (
-                                        <tr
-                                            key={`${event.age}-${event.type}-${(currentPage - 1) * PAGE_SIZE + index}`}
-                                            className="text-gray-800 dark:text-gray-200"
-                                        >
-                                            <td className="whitespace-nowrap px-4 py-3">
-                                                {event.type === 'event' ? 'イベント' : '目標'}
-                                            </td>
-                                            <td className="max-w-56 break-words px-4 py-3 font-medium">
-                                                {event.name}
-                                            </td>
-                                            <td className="whitespace-nowrap px-4 py-3 text-right">
-                                                {event.age}歳
-                                            </td>
-                                            <td className="whitespace-nowrap px-4 py-3">{event.category}</td>
-                                            <td className="max-w-80 whitespace-pre-wrap break-words px-4 py-3">
-                                                {event.description || '—'}
-                                            </td>
-                                            <td className="whitespace-nowrap px-4 py-3">
-                                                {event.type === 'goal' ? event.status : '—'}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </>
+                                ))}
+                                </tbody>
+                            </table>
+                        </div>
                     )}
                 </>
             )}
