@@ -11,10 +11,43 @@ describe('parseLifeEventsCsv', () => {
         expect(events.some((event) => event.name === '就職')).toBe(true);
         expect(events.some((event) => event.name === '初めての仕事')).toBe(false);
         expect(events.some((event) => event.name === '専門分野のスキルを身につける')).toBe(false);
-        expect(events.find((event) => event.name === '資産500万円達成')).toMatchObject({
+        expect(events.find((event) => event.name === '貯金目標達成')).toMatchObject({
             type: 'event',
-            age: 25,
+            age: 26,
             category: '仕事',
+        });
+        expect(events.find((event) => event.name === '半世紀生きる')).toMatchObject({
+            type: 'goal',
+            age: 50,
+            category: '家族',
+            status: '未着手',
+        });
+        expect(events.find((event) => event.name === '1世紀生きる')).toMatchObject({
+            type: 'goal',
+            age: 100,
+            category: '家族',
+            status: '未着手',
+        });
+        expect(events.find((event) => event.name === '銀婚式')).toMatchObject({
+            type: 'event',
+            age: 54,
+            category: '家族',
+        });
+        expect(events.find((event) => event.name === '金婚式')).toMatchObject({
+            type: 'event',
+            age: 79,
+            category: '家族',
+        });
+        expect(events.find((event) => event.name === '還暦')).toMatchObject({
+            type: 'event',
+            age: 60,
+            category: '家族',
+        });
+        expect(events.find((event) => event.name === '孫の顔を見る')).toMatchObject({
+            type: 'goal',
+            age: 70,
+            category: '家族',
+            status: '未着手',
         });
         expect(events.find((event) => event.name === '婚活')).toMatchObject({
             type: 'event',
@@ -23,6 +56,18 @@ describe('parseLifeEventsCsv', () => {
         });
         expect(events.find((event) => event.name === '結婚')?.age).toBe(29);
         expect(events.find((event) => event.name === '子どもの誕生')?.age).toBe(33);
+        expect(
+            events
+                .filter((event) => event.name.startsWith('子どもの') && event.name !== '子どもの誕生')
+                .map(({name, age, category, type}) => ({name, age, category, type}))
+        ).toEqual([
+            {name: '子どもの幼稚園・保育園入園', age: 36, category: '学業', type: 'event'},
+            {name: '子どもの幼稚園・保育園卒園', age: 39, category: '学業', type: 'event'},
+            {name: '子どもの小学校卒業', age: 45, category: '学業', type: 'event'},
+            {name: '子どもの中学校卒業', age: 48, category: '学業', type: 'event'},
+            {name: '子どもの高校卒業', age: 51, category: '学業', type: 'event'},
+            {name: '子どもの大学卒業', age: 55, category: '学業', type: 'event'},
+        ]);
     });
 
     it('イベントと目標を解析し、年齢を数値に変換する', () => {

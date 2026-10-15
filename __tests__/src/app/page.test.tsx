@@ -2,6 +2,20 @@ import {fireEvent, render, screen, within} from '@testing-library/react';
 import Home from '../../../src/app/page';
 
 describe('Home', () => {
+    it('導入文と年齢・性別の表示条件を説明する', async () => {
+        render(await Home());
+
+        expect(screen.getByText(
+            '人生の出来事や目標を年齢軸で確認できます。年齢や性別を変えると、タイムラインと進行度の表示がその場で切り替わります。'
+        )).toBeInTheDocument();
+        const displayConditions = screen.getByRole('group', {name: '表示条件'});
+        expect(within(displayConditions).getByRole('spinbutton', {name: '現在の年齢'})).toHaveValue(29);
+        expect(within(displayConditions).getByRole('combobox', {name: '性別:'})).toHaveValue('男性');
+        expect(within(displayConditions).getByText(
+            '年齢と性別の変更はこの画面だけに反映され、保存されません。ページを再表示すると設定CSVの値に戻ります。'
+        )).toBeInTheDocument();
+    });
+
     it('設定CSVの性別を選択欄の初期値として表示する', async () => {
         render(await Home());
 
