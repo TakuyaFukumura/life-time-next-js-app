@@ -22,6 +22,7 @@ export default function GuidePage() {
                     <section aria-labelledby="timeline-guide" className={sectionClassName}>
                         <h2 id="timeline-guide" className="text-xl font-semibold">タイムラインの見方</h2>
                         <ul className="mt-4 list-disc space-y-2 pl-6 text-gray-700 dark:text-gray-300">
+                            <li>画面上部の性別選択を変更すると、平均寿命・健康寿命の目安と進行度に反映されます。変更は保存されず、再読み込みすると設定CSVの値に戻ります。</li>
                             <li>横軸は0歳から100歳までの年齢で、縦線が現在の年齢を示します。</li>
                             <li>現在までの濃い線は経過した年数、薄い線はこれからの年数です。</li>
                             <li>破線は、性別に応じた日本の2025年平均寿命の目安を示します。「その他」「未設定」の場合は男女平均です。</li>

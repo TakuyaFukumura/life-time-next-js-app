@@ -1,9 +1,11 @@
 import {readFile} from 'node:fs/promises';
 import path from 'node:path';
 import {parse} from 'csv-parse/sync';
+import {GENDERS} from './gender';
+import type {Gender} from './gender';
 
-export const GENDERS = ['男性', '女性', 'その他', '未設定'] as const;
-export type Gender = typeof GENDERS[number];
+export {GENDERS} from './gender';
+export type {Gender} from './gender';
 
 export type LifeSettings = {
     currentAge: number;
