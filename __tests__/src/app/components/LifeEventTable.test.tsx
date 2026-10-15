@@ -143,8 +143,9 @@ describe('LifeEventTable', () => {
 
         expect(screen.getByRole('table').querySelectorAll('tbody tr')).toHaveLength(1);
         expect(screen.getByText('1件 / 2件')).toBeInTheDocument();
-        expect(screen.getByText('資格取得')).toBeInTheDocument();
-        expect(screen.queryByText('誕生')).not.toBeInTheDocument();
+        const table = screen.getByRole('table');
+        expect(within(table).getByText('資格取得')).toBeInTheDocument();
+        expect(within(table).queryByText('誕生')).not.toBeInTheDocument();
         expect(screen.getByRole('list', {name: '適用中の条件'})).toHaveTextContent(
             '種別: 目標カテゴリ: 仕事目標状態: 進行中',
         );
@@ -178,10 +179,11 @@ describe('LifeEventTable', () => {
             target: {value: '学業'},
         });
 
-        expect(screen.getByRole('table')).toHaveTextContent('大学卒業');
+        const table = screen.getByRole('table');
+        expect(table).toHaveTextContent('大学卒業');
         expect(screen.getByText('1件 / 3件')).toBeInTheDocument();
-        expect(screen.queryByText('資格取得')).not.toBeInTheDocument();
-        expect(screen.queryByText('誕生')).not.toBeInTheDocument();
+        expect(within(table).queryByText('資格取得')).not.toBeInTheDocument();
+        expect(within(table).queryByText('誕生')).not.toBeInTheDocument();
     });
 
     it('名称または説明のキーワードで検索し、条件変更後は1ページ目へ戻る', () => {
@@ -210,6 +212,46 @@ describe('LifeEventTable', () => {
             target: {value: '説明20'},
         });
         expect(screen.getByText('1〜1件を表示 / 1件')).toBeInTheDocument();
-        expect(screen.getByText('出来事20')).toBeInTheDocument();
+        expect(within(screen.getByRole('table')).getByText('出来事20')).toBeInTheDocument();
+    });
+
+    it('モバイルカードに全項目を表示し、並べ替えられる', () => {
+        const sortableEvents: LifeEvent[] = [
+            {
+                type: 'goal',
+                name: 'Zeta',
+                age: 10,
+                category: '仕事',
+                description: 'Career goal',
+                status: '進行中',
+            },
+            {
+                type: 'event',
+                name: 'Alpha',
+                age: 20,
+                category: '家族',
+                description: 'Family event',
+            },
+        ];
+        render(<LifeEventTable events={sortableEvents}/>);
+
+        const mobileList = screen.getByRole('list', {name: 'モバイルのデータ一覧'});
+        const cardNames = () => within(mobileList).getAllByRole('heading', {level: 3})
+            .map((heading) => heading.textContent);
+
+        expect(cardNames()).toEqual(['Zeta', 'Alpha']);
+        expect(within(mobileList).getByText('Family event')).toBeInTheDocument();
+        expect(within(mobileList).getByText('20歳')).toBeInTheDocument();
+        expect(within(mobileList).getByText('Career goal')).toBeInTheDocument();
+        expect(within(mobileList).getByText('進行中')).toBeInTheDocument();
+
+        fireEvent.change(screen.getByRole('combobox', {name: 'モバイルの並べ替え項目'}), {
+            target: {value: 'name'},
+        });
+        expect(cardNames()).toEqual(['Alpha', 'Zeta']);
+
+        fireEvent.click(screen.getByRole('button', {name: '降順にする'}));
+        expect(cardNames()).toEqual(['Zeta', 'Alpha']);
+        expect(screen.getByRole('button', {name: '昇順にする'})).toHaveTextContent('降順');
     });
 });
