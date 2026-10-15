@@ -11,6 +11,7 @@ import {
     LIFE_EXPECTANCY_DATA_YEAR,
 } from '../../lib/life-expectancy';
 import type {Gender} from '../../lib/gender';
+import {GENDERS} from '../../lib/gender';
 
 const TIMELINE_WIDTH = 1400;
 const HORIZONTAL_PADDING = 24;
@@ -135,14 +136,15 @@ function getTooltipPosition(
 export default function Timeline({
                                      events,
                                      currentAge,
-                                     gender,
+                                     initialGender,
                                  }: {
     readonly events: readonly LifeEvent[];
     readonly currentAge: number;
-    readonly gender: Gender;
+    readonly initialGender: Gender;
 }) {
     const [currentAgeInput, setCurrentAgeInput] = useState(String(currentAge));
     const [displayAge, setDisplayAge] = useState(currentAge);
+    const [gender, setGender] = useState(initialGender);
     const [selectedEventIndex, setSelectedEventIndex] = useState<number | null>(null);
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
     const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
@@ -198,6 +200,13 @@ export default function Timeline({
         }
     };
 
+    const handleGenderChange = (value: string) => {
+        const selectedGender = GENDERS.find((option) => option === value);
+        if (selectedGender) {
+            setGender(selectedGender);
+        }
+    };
+
     const scrollToAge = (age: number) => {
         const container = scrollContainerRef.current;
         if (!container) {
@@ -227,30 +236,66 @@ export default function Timeline({
 
     return (
         <section aria-label="人生タイムライン">
-            <div
-                className="mb-4 flex flex-wrap items-end justify-between gap-4 text-sm text-gray-700 dark:text-gray-300">
-                <div>
-                    <label htmlFor="current-age-input" className="mb-1 block font-medium">
-                        現在の年齢
-                    </label>
-                    <div className="flex items-center gap-2">
-                        <input
-                            id="current-age-input"
-                            type="number"
-                            min={0}
-                            max={100}
-                            step={1}
-                            value={currentAgeInput}
-                            onChange={(event) => handleCurrentAgeChange(event.currentTarget.value)}
-                            onBlur={handleCurrentAgeBlur}
-                            className="w-24 rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus-visible:outline-gray-200"
-                        />
-                        <span>歳</span>
+            <fieldset className="mb-4 rounded-xl border border-gray-200 bg-white px-4 pb-4 pt-1 text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                <legend className="px-2 text-sm font-semibold">表示条件</legend>
+                <div className="flex flex-wrap items-end gap-x-6 gap-y-4 text-sm">
+                    <div>
+                        <label htmlFor="current-age-input" className="mb-1 block font-medium">
+                            現在の年齢
+                        </label>
+                        <div className="flex items-center gap-2">
+                            <input
+                                id="current-age-input"
+                                type="number"
+                                min={0}
+                                max={100}
+                                step={1}
+                                value={currentAgeInput}
+                                onChange={(event) => handleCurrentAgeChange(event.currentTarget.value)}
+                                onBlur={handleCurrentAgeBlur}
+                                className="w-24 rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus-visible:outline-gray-200"
+                            />
+                            <span>歳</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label htmlFor="gender-select" className="mb-1 block font-medium">
+                            性別:
+                        </label>
+                        <select
+                            id="gender-select"
+                            value={gender}
+                            onChange={(event) => handleGenderChange(event.currentTarget.value)}
+                            className="rounded-lg border border-gray-300 bg-white px-2 py-2 text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus-visible:outline-gray-200"
+                        >
+                            {GENDERS.map((option) => (
+                                <option key={option} value={option}>{option}</option>
+                            ))}
+                        </select>
                     </div>
                 </div>
+                <p className="mt-3 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
+                    年齢と性別の変更はこの画面だけに反映され、保存されません。ページを再表示すると設定CSVの値に戻ります。
+                </p>
+            </fieldset>
+            <div className="mb-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-gray-700 dark:text-gray-300">
                 <span role="img" aria-label="イベントは丸、目標はひし形">
                     <span aria-hidden="true">●</span> イベント
                     <span className="ml-4" aria-hidden="true">◆</span> 目標
+                </span>
+                <span className="inline-flex items-center gap-2">
+                    <span
+                        aria-hidden="true"
+                        className="size-3 rounded-full border-2 border-gray-700 bg-gray-700 dark:border-gray-200 dark:bg-gray-200"
+                    />
+                    経過済み（現在年齢まで）
+                </span>
+                <span className="inline-flex items-center gap-2">
+                    <span
+                        aria-hidden="true"
+                        className="size-3 rounded-full border-2 border-gray-700 bg-transparent dark:border-gray-200"
+                    />
+                    これから
                 </span>
                 <span className="inline-flex items-center gap-2">
                     <span
@@ -273,6 +318,9 @@ export default function Timeline({
                     </span>
                 </span>
             </div>
+            <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
+                年齢軸は0歳から100歳までです。左右にスクロールして閲覧できます。
+            </p>
             {events.length > 0 && (
                 <nav
                     aria-label="タイムラインの年齢位置へ移動"
