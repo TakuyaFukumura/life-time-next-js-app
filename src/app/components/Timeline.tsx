@@ -1,6 +1,6 @@
 'use client';
 
-import {useState} from 'react';
+import {useRef, useState} from 'react';
 import type {FocusEvent} from 'react';
 import type {LifeEvent} from '../../lib/life-events';
 import {
@@ -37,10 +37,14 @@ function getAgeX(age: number): number {
 type PositionedEvent = {
     event: LifeEvent;
     x: number;
-    cardLeft: number;
     cardHeight: number;
     lane: number;
     markerY: number;
+};
+
+type TooltipPosition = {
+    left: number;
+    top: number;
 };
 
 function layoutEvents(events: readonly LifeEvent[]): PositionedEvent[] {
@@ -51,7 +55,6 @@ function layoutEvents(events: readonly LifeEvent[]): PositionedEvent[] {
 
     return sorted.map(({event}) => {
         const x = getAgeX(event.age);
-        const cardLeft = Math.max(0, Math.min(x - CARD_WIDTH / 2, TIMELINE_WIDTH - CARD_WIDTH));
         let lane = laneLastX.findIndex((lastX) => x - lastX >= MARKER_SIZE + 4);
         if (lane === -1) {
             lane = laneLastX.length;
@@ -66,12 +69,67 @@ function layoutEvents(events: readonly LifeEvent[]): PositionedEvent[] {
         return {
             event,
             x,
-            cardLeft,
             lane,
             cardHeight,
             markerY: AXIS_Y + 54 + lane * MARKER_LANE_HEIGHT,
         };
     });
+}
+
+function getTooltipPosition(
+    targetIndex: number,
+    positionedEvents: readonly PositionedEvent[],
+    height: number,
+): TooltipPosition {
+    const target = positionedEvents[targetIndex];
+    const centeredLeft = Math.max(0, Math.min(target.x - CARD_WIDTH / 2, TIMELINE_WIDTH - CARD_WIDTH));
+    const minimumTop = AXIS_Y + 48;
+    const maximumTop = Math.max(minimumTop, height - target.cardHeight);
+    const preferredTop = Math.max(
+        minimumTop,
+        Math.min(target.markerY + MARKER_SIZE, maximumTop),
+    );
+    const horizontalPositions = [
+        centeredLeft,
+        0,
+        TIMELINE_WIDTH - CARD_WIDTH,
+        ...positionedEvents.flatMap(({x}) => [
+            x - CARD_WIDTH - 16,
+            x + 16,
+        ]),
+    ].map((left) => Math.max(0, Math.min(left, TIMELINE_WIDTH - CARD_WIDTH)));
+    const verticalPositions = [
+        preferredTop,
+        ...Array.from(
+            {length: Math.floor((maximumTop - minimumTop) / MARKER_LANE_HEIGHT) + 1},
+            (_, index) => minimumTop + index * MARKER_LANE_HEIGHT,
+        ),
+    ];
+    const candidates = [...new Set(horizontalPositions)].flatMap((left) =>
+        [...new Set(verticalPositions)].map((top) => ({left, top}))
+    ).sort((first, second) => (
+        Math.abs(first.left - centeredLeft) + Math.abs(first.top - preferredTop) -
+        Math.abs(second.left - centeredLeft) - Math.abs(second.top - preferredTop)
+    ));
+    const countMarkerOverlaps = ({left, top}: TooltipPosition) => positionedEvents
+        .filter((_, index) => index !== targetIndex)
+        .filter(({x, markerY}) => (
+            left < x + 16 &&
+            left + CARD_WIDTH > x - 16 &&
+            top < markerY + 16 &&
+            top + target.cardHeight > markerY - 16
+        ))
+        .length;
+
+    const position = candidates.find((candidate) => countMarkerOverlaps(candidate) === 0) ??
+        candidates.reduce((best, candidate) => (
+            countMarkerOverlaps(candidate) < countMarkerOverlaps(best) ? candidate : best
+        ));
+
+    return {
+        left: position.left,
+        top: position.top - target.markerY,
+    };
 }
 
 export default function Timeline({
@@ -85,10 +143,15 @@ export default function Timeline({
 }) {
     const [currentAgeInput, setCurrentAgeInput] = useState(String(currentAge));
     const [displayAge, setDisplayAge] = useState(currentAge);
-    const [selectedEvent, setSelectedEvent] = useState<LifeEvent | null>(null);
+    const [selectedEventIndex, setSelectedEventIndex] = useState<number | null>(null);
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
     const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const markerButtonRefs = useRef(new Map<number, HTMLButtonElement>());
     const positionedEvents = layoutEvents(events);
+    const selectedEvent = selectedEventIndex === null
+        ? null
+        : positionedEvents[selectedEventIndex]?.event ?? null;
     const averageLifeExpectancy = getAverageLifeExpectancy(gender);
     const averageLifeExpectancyX = getAgeX(averageLifeExpectancy);
     const healthyLifeExpectancy = getHealthyLifeExpectancy(gender);
@@ -133,6 +196,33 @@ export default function Timeline({
         if (!/^\d+$/.test(currentAgeInput) || Number(currentAgeInput) > 100) {
             setCurrentAgeInput(String(displayAge));
         }
+    };
+
+    const scrollToAge = (age: number) => {
+        const container = scrollContainerRef.current;
+        if (!container) {
+            return;
+        }
+
+        const maxScrollLeft = Math.max(0, container.scrollWidth - container.clientWidth);
+        const left = Math.max(0, Math.min(
+            getAgeX(age) - container.clientWidth / 2,
+            maxScrollLeft,
+        ));
+        const prefersReducedMotion = typeof window.matchMedia === 'function' &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        container.scrollTo({
+            left,
+            behavior: prefersReducedMotion ? 'auto' : 'smooth',
+        });
+    };
+
+    const closeSelectedEvent = (restoreFocus: boolean) => {
+        if (restoreFocus && selectedEventIndex !== null) {
+            markerButtonRefs.current.get(selectedEventIndex)?.focus();
+        }
+        setSelectedEventIndex(null);
     };
 
     return (
@@ -182,7 +272,36 @@ export default function Timeline({
                     </span>
                 </span>
             </div>
+            {events.length > 0 && (
+                <nav
+                    aria-label="タイムラインの年齢位置へ移動"
+                    className="mb-3 flex flex-wrap gap-2"
+                >
+                    <button
+                        type="button"
+                        onClick={() => scrollToAge(0)}
+                        className="min-h-11 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700 dark:focus-visible:outline-gray-200"
+                    >
+                        0歳へ
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => scrollToAge(displayAge)}
+                        className="min-h-11 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700 dark:focus-visible:outline-gray-200"
+                    >
+                        現在年齢へ
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => scrollToAge(100)}
+                        className="min-h-11 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700 dark:focus-visible:outline-gray-200"
+                    >
+                        100歳へ
+                    </button>
+                </nav>
+            )}
             <div
+                ref={scrollContainerRef}
                 className="overflow-x-auto rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
                 role="region"
                 aria-label="年齢0歳から100歳までのタイムライン。横スクロールできます"
@@ -266,14 +385,18 @@ export default function Timeline({
                                 </div>
                             );
                         })}
-                        {positionedEvents.map(({event, x, cardLeft, cardHeight, markerY}, index) => {
+                        {positionedEvents.map(({event, x, cardHeight, markerY}, index) => {
                             const isCardVisible = hoveredIndex === index || focusedIndex === index;
+                            const isSelected = selectedEventIndex === index;
                             const isElapsed = event.age <= displayAge;
                             const tooltipId = `life-event-tooltip-${index}`;
                             const periodLabel = isElapsed ? '経過済み' : 'これから';
                             const markerName = event.type === 'goal'
                                 ? `目標: ${event.name}、${event.age}歳、${event.category}、${event.status}、${periodLabel}`
                                 : `イベント: ${event.name}、${event.age}歳、${event.category}、${periodLabel}`;
+                            const tooltipPosition = isCardVisible
+                                ? getTooltipPosition(index, positionedEvents, height)
+                                : null;
 
                             return (
                                 <div
@@ -298,14 +421,23 @@ export default function Timeline({
                                     />
                                     <button
                                         type="button"
-                                        aria-pressed={selectedEvent === event}
+                                        aria-pressed={isSelected}
                                         aria-label={markerName}
                                         aria-describedby={isCardVisible ? tooltipId : undefined}
                                         onClick={() => {
-                                            setSelectedEvent(selectedEvent === event ? null : event);
+                                            setSelectedEventIndex(isSelected ? null : index);
                                             setFocusedIndex(index);
                                         }}
-                                        className="absolute left-0 top-0 z-20 grid size-8 -translate-x-1/2 -translate-y-1/2 cursor-pointer place-items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700 dark:focus-visible:outline-gray-200"
+                                        ref={(button) => {
+                                            if (button) {
+                                                markerButtonRefs.current.set(index, button);
+                                            } else {
+                                                markerButtonRefs.current.delete(index);
+                                            }
+                                        }}
+                                        className={`absolute left-0 top-0 z-20 grid size-8 -translate-x-1/2 -translate-y-1/2 cursor-pointer place-items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700 dark:focus-visible:outline-gray-200 ${
+                                            isSelected ? 'ring-2 ring-offset-2 ring-gray-700 dark:ring-gray-200' : ''
+                                        }`}
                                     >
                                         <span
                                             aria-hidden="true"
@@ -317,14 +449,14 @@ export default function Timeline({
                                         />
                                         <span className="sr-only">{markerName}</span>
                                     </button>
-                                    {isCardVisible && (
+                                    {tooltipPosition && (
                                         <div
                                             id={tooltipId}
                                             role="tooltip"
                                             className="absolute z-30 rounded-lg border border-gray-300 bg-white p-3 text-gray-900 shadow-xl dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 motion-reduce:animate-none animate-[life-event-popover_160ms_ease-out]"
                                             style={{
-                                                left: cardLeft - x,
-                                                top: MARKER_SIZE,
+                                                left: tooltipPosition.left - x,
+                                                top: tooltipPosition.top,
                                                 width: CARD_WIDTH,
                                                 minHeight: cardHeight,
                                             }}
@@ -347,15 +479,49 @@ export default function Timeline({
                 )}
             </div>
             {selectedEvent && (
-                <div
+                <section
+                    aria-labelledby="selected-event-heading"
                     className="mt-4 rounded-xl border border-gray-200 bg-white p-5 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                    aria-live="polite"
                 >
-                    <h2 className="font-semibold">{selectedEvent.name}</h2>
+                    <p className="sr-only" role="status">
+                        選択中: {selectedEvent.name}、{selectedEvent.age}歳
+                    </p>
+                    <div className="flex items-start justify-between gap-4">
+                        <h2 id="selected-event-heading" className="font-semibold">
+                            {selectedEvent.name}
+                        </h2>
+                        <button
+                            type="button"
+                            onClick={() => closeSelectedEvent(true)}
+                            className="shrink-0 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700 dark:focus-visible:outline-gray-200"
+                        >
+                            閉じる
+                        </button>
+                    </div>
+                    <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-gray-700 dark:text-gray-300">
+                        <div>
+                            <dt className="inline font-medium">年齢: </dt>
+                            <dd className="inline">{selectedEvent.age}歳</dd>
+                        </div>
+                        <div>
+                            <dt className="inline font-medium">種別: </dt>
+                            <dd className="inline">{selectedEvent.type === 'event' ? 'イベント' : '目標'}</dd>
+                        </div>
+                        <div>
+                            <dt className="inline font-medium">カテゴリ: </dt>
+                            <dd className="inline">{selectedEvent.category}</dd>
+                        </div>
+                        {selectedEvent.type === 'goal' && (
+                            <div>
+                                <dt className="inline font-medium">状態: </dt>
+                                <dd className="inline">{selectedEvent.status}</dd>
+                            </div>
+                        )}
+                    </dl>
                     <p className="mt-2 whitespace-pre-wrap text-gray-700 dark:text-gray-300">
                         {selectedEvent.description || '説明はありません。'}
                     </p>
-                </div>
+                </section>
             )}
             <section
                 aria-labelledby="life-progress-heading"
