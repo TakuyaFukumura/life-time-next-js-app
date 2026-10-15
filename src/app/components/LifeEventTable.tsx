@@ -104,8 +104,13 @@ export default function LifeEventTable({events}: { readonly events: readonly Lif
     );
     const firstVisibleEvent = filteredEvents.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
     const lastVisibleEvent = Math.min(currentPage * PAGE_SIZE, filteredEvents.length);
-    const hasActiveFilters = typeFilter !== 'all' || categoryFilter !== 'all' ||
-        statusFilter !== 'all' || keyword.trim() !== '';
+    const activeFilterLabels = [
+        keyword.trim() ? `キーワード: ${keyword.trim()}` : null,
+        typeFilter === 'event' ? '種別: イベント' : typeFilter === 'goal' ? '種別: 目標' : null,
+        categoryFilter !== 'all' ? `カテゴリ: ${categoryFilter}` : null,
+        statusFilter !== 'all' ? `目標状態: ${statusFilter}` : null,
+    ].filter((filter): filter is string => filter !== null);
+    const hasActiveFilters = activeFilterLabels.length > 0;
 
     const clearFilters = () => {
         setTypeFilter('all');
@@ -226,6 +231,26 @@ export default function LifeEventTable({events}: { readonly events: readonly Lif
                             </div>
                         )}
                     </div>
+                    {hasActiveFilters && (
+                        <div className="mb-4 rounded-lg bg-gray-50 px-4 py-3 dark:bg-gray-800">
+                            <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                適用中の条件
+                            </p>
+                            <ul
+                                aria-label="適用中の条件"
+                                className="flex flex-wrap gap-2"
+                            >
+                                {activeFilterLabels.map((filter) => (
+                                    <li
+                                        key={filter}
+                                        className="rounded-full border border-gray-300 bg-white px-3 py-1 text-sm text-gray-800 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200"
+                                    >
+                                        {filter}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
                     {filteredEvents.length === 0 ? (
                         <p className="rounded-xl border border-gray-200 bg-white p-5 text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
                             条件に一致するデータがありません。
