@@ -15,7 +15,7 @@ describe('parseLifeEventsCsv', () => {
             type: 'goal',
             age: 26,
             category: '資産形成',
-            status: '未着手',
+            status: '達成',
         });
         expect(events.find((event) => event.name === '半世紀生きる')).toMatchObject({
             type: 'goal',
