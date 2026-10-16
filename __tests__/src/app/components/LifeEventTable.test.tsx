@@ -186,6 +186,28 @@ describe('LifeEventTable', () => {
         expect(within(table).queryByText('誕生')).not.toBeInTheDocument();
     });
 
+    it('資産形成カテゴリでデータを絞り込む', () => {
+        const financialGoal: LifeEvent = {
+            type: 'goal',
+            name: 'NISA枠埋める',
+            age: 40,
+            category: '資産形成',
+            description: '',
+            status: '未着手',
+        };
+        render(<LifeEventTable events={[...events, financialGoal]}/>);
+
+        fireEvent.change(screen.getByRole('combobox', {name: 'カテゴリ'}), {
+            target: {value: '資産形成'},
+        });
+
+        const table = screen.getByRole('table');
+        expect(table).toHaveTextContent('NISA枠埋める');
+        expect(screen.getByText('1件 / 3件')).toBeInTheDocument();
+        expect(within(table).queryByText('資格取得')).not.toBeInTheDocument();
+        expect(within(table).queryByText('誕生')).not.toBeInTheDocument();
+    });
+
     it('名称または説明のキーワードで検索し、条件変更後は1ページ目へ戻る', () => {
         const manyEvents: LifeEvent[] = Array.from({length: 23}, (_, index) => ({
             type: 'event',
