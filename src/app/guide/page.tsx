@@ -38,7 +38,7 @@ export default function GuidePage() {
                     <section aria-labelledby="table-guide" className={sectionClassName}>
                         <h2 id="table-guide" className="text-xl font-semibold">データ一覧の使い方</h2>
                         <p className="mt-4 text-gray-700 dark:text-gray-300">
-                            タイムラインの下にはデータ一覧が表示されます。列見出しで並べ替え、種別・カテゴリ（仕事・家族・学業）・目標状態や名称・説明のキーワードで絞り込めます。
+                            タイムラインの下にはデータ一覧が表示されます。列見出しで並べ替え、種別・カテゴリ（仕事・家族・学業・資産形成）・目標状態や名称・説明のキーワードで絞り込めます。
                         </p>
                     </section>
                 </div>

@@ -12,9 +12,10 @@ describe('parseLifeEventsCsv', () => {
         expect(events.some((event) => event.name === '初めての仕事')).toBe(false);
         expect(events.some((event) => event.name === '専門分野のスキルを身につける')).toBe(false);
         expect(events.find((event) => event.name === '貯金目標達成')).toMatchObject({
-            type: 'event',
+            type: 'goal',
             age: 26,
-            category: '仕事',
+            category: '資産形成',
+            status: '未着手',
         });
         expect(events.find((event) => event.name === '半世紀生きる')).toMatchObject({
             type: 'goal',
@@ -25,7 +26,7 @@ describe('parseLifeEventsCsv', () => {
         expect(events.find((event) => event.name === 'NISA枠埋める')).toMatchObject({
             type: 'goal',
             age: 40,
-            category: '仕事',
+            category: '資産形成',
             status: '未着手',
         });
         expect(events.find((event) => event.name === '1世紀生きる')).toMatchObject({
