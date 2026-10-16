@@ -29,6 +29,12 @@ describe('parseLifeEventsCsv', () => {
             category: '資産形成',
             status: '未着手',
         });
+        expect(events.find((event) => event.name === 'iDeCo活用開始')).toMatchObject({
+            type: 'goal',
+            age: 41,
+            category: '資産形成',
+            status: '未着手',
+        });
         expect(events.find((event) => event.name === '1世紀生きる')).toMatchObject({
             type: 'goal',
             age: 100,
